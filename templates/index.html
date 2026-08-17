@@ -1,0 +1,2457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>纳瓦尔女性向长图文生成器 · 在线版（内容流水线）</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#1B2A4A',
+            gold: '#C9A227',
+            cream: '#F5EFE6',
+            ochre: '#B5651D',
+            warmgray: '#8B7E72',
+            paper: '#FDFBF7',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+    body { font-family: 'Noto Sans SC', sans-serif; background: #F5EFE6; }
+    /* ===== 手机适配 ===== */
+    * { -webkit-tap-highlight-color: transparent; }
+    html, body { overflow-x: hidden; max-width: 100%; }
+    input, textarea, select { font-size: 16px !important; } /* 防止 iOS 聚焦自动放大 */
+    button, .btn, a[role="button"] { min-height: 40px; }      /* 触控目标够大 */
+    .modal-scroll { -webkit-overflow-scrolling: touch; }
+    @media (max-width: 640px) {
+      .max-w-7xl { padding-left: 12px !important; padding-right: 12px !important; }
+      .grid-cols-2 { grid-template-columns: 1fr !important; }  /* 固定两列在手机上堆叠 */
+      .text-3xl { font-size: 1.5rem !important; }
+      .text-4xl { font-size: 1.75rem !important; }
+      .batch-bar { flex-wrap: wrap; gap: 8px; }
+      .card { margin-bottom: 12px; }
+    }
+    .serif { font-family: 'Noto Serif SC', serif; }
+    .card-shadow { box-shadow: 0 4px 24px rgba(27,42,74,0.08); }
+    .preview-page {
+      width: 375px;
+      min-height: 600px;
+      background: #FDFBF7;
+      margin: 0 auto 24px;
+      padding: 32px 28px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(27,42,74,0.12);
+      position: relative;
+    }
+    .preview-cover {
+      min-height: 560px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .gold-highlight { color: #B5651D; font-weight: 600; }
+    .ink-title { color: #1B2A4A; font-weight: 700; }
+    .page-num {
+      position: absolute;
+      bottom: 16px;
+      right: 24px;
+      color: #8B7E72;
+      font-size: 13px;
+    }
+    .note-tag { background: rgba(201,162,39,0.12); color: #B5651D; }
+    .selected-card { border: 2px solid #C9A227; background: #FDFBF7; }
+    textarea, input, select {
+      background: #FDFBF7;
+      border: 1px solid #E5DDD2;
+      transition: all 0.2s;
+    }
+    textarea:focus, input:focus, select:focus {
+      outline: none;
+      border-color: #C9A227;
+      box-shadow: 0 0 0 3px rgba(201,162,39,0.15);
+    }
+    .btn-primary {
+      background: #1B2A4A;
+      color: #F5EFE6;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover { background: #243760; }
+    .btn-secondary {
+      background: #C9A227;
+      color: #1B2A4A;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { background: #B08D1F; }
+    .btn-ai {
+      background: linear-gradient(135deg, #B5651D 0%, #C9A227 100%);
+      color: #FDFBF7;
+      transition: all 0.2s;
+    }
+    .btn-ai:hover { opacity: 0.92; }
+    .mode-btn {
+      border: 1px solid #E5DDD2;
+      background: #FDFBF7;
+      color: #8B7E72;
+      transition: all 0.2s;
+    }
+    .mode-btn.active {
+      border-color: #C9A227;
+      background: #FDFBF7;
+      color: #1B2A4A;
+      font-weight: 600;
+    }
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(245,239,230,0.3);
+      border-top-color: #F5EFE6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .li-dot::before { content: "·"; color: #B5651D; font-weight: 700; margin-right: 6px; }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div class="max-w-7xl mx-auto px-6 py-8">
+    <!-- Header -->
+    <header class="mb-10 text-center">
+      <h1 class="text-3xl md:text-4xl font-bold text-ink mb-3 serif">纳瓦尔女性向长图文生成器</h1>
+      <p class="text-warmgray text-base">在线 · 调研AI + 蒸馏AI + 生产AI + 质检AI 联动 · 生成有洞见、有人味、有差异化的同款小红书文案</p>
+    </header>
+
+    <!-- 多设备访问面板：手机/其他电脑扫码即用 -->
+    <div class="bg-white rounded-2xl p-5 card-shadow mb-8">
+      <div class="flex flex-col md:flex-row md:items-center gap-5">
+        <div class="flex-shrink-0 text-center">
+          <img id="qrImg" alt="访问二维码" class="w-32 h-32 rounded-lg border border-cream mx-auto bg-cream">
+          <p class="text-xs text-warmgray mt-2">手机扫码打开</p>
+        </div>
+        <div class="flex-1">
+          <h2 class="text-lg font-bold text-ink mb-2 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-ochre text-white flex items-center justify-center text-sm">📱</span>
+            在手机 / 其他电脑上打开
+          </h2>
+          <p class="text-xs text-warmgray mb-3 leading-relaxed">同一 Wi-Fi 下，用手机浏览器扫左侧二维码，或访问下面的局域网地址即可。换设备无需重装：把整个项目文件夹拷贝过去，运行启动脚本就能用。</p>
+          <div class="flex items-center gap-2 flex-wrap">
+            <code id="lanUrl" class="px-3 py-2 rounded-lg bg-cream text-ink text-sm break-all">检测中…</code>
+            <button onclick="copyLanUrl()" class="btn-secondary px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap">复制链接</button>
+          </div>
+          <p id="lanHint" class="text-xs text-warmgray mt-2"></p>
+          <div class="mt-3 pt-3 border-t border-cream">
+            <p class="text-xs text-warmgray mb-2">🌐 公网地址（手机用流量 / 不同网络也能访问）：含 <code>cfargotunnel.com</code> 为固定地址(重启不变)，含 <code>trycloudflare.com</code> 为临时地址(重启会变，运行 setup_named_tunnel.bat 可固定)：</p>
+            <div class="flex items-center gap-2 flex-wrap">
+              <code id="pubUrl" class="px-3 py-2 rounded-lg bg-cream text-ink text-sm break-all">检测中…</code>
+              <button onclick="copyPubUrl()" class="btn-secondary px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap">复制公网</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Left: Inputs -->
+      <div class="space-y-6">
+        <!-- Mode Switch -->
+        <div class="bg-white rounded-2xl p-5 card-shadow">
+          <div class="flex gap-3">
+            <button id="modeTemplate" onclick="setMode('template')" class="mode-btn flex-1 py-3 rounded-xl text-sm font-medium">
+              模板模式（快/稳）
+            </button>
+            <button id="modeAI" onclick="setMode('ai')" class="mode-btn flex-1 py-3 rounded-xl text-sm font-medium active">
+              AI 现写（人味/独到）
+            </button>
+          </div>
+          <p id="modeDesc" class="text-xs text-warmgray mt-3">模板模式：按预设结构秒出草稿；AI 现写：每次调用大模型重新写，更活更有人味。</p>
+        </div>
+
+        <!-- API 配置：红狐 + 大模型，支持热切换 -->
+        <div id="apiConfigCard" class="bg-white rounded-2xl p-6 card-shadow">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-ink flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full bg-ochre text-white flex items-center justify-center text-sm">⚙</span>
+              API 配置
+            </h2>
+            <div class="flex items-center gap-2">
+              <span id="redfoxStatus" class="text-xs px-2 py-1 rounded-full bg-cream text-warmgray">红狐：检测中</span>
+              <span id="keyStatus" class="text-xs px-2 py-1 rounded-full bg-cream text-warmgray">大模型：检测中</span>
+              <button onclick="toggleCallLogs()" class="text-xs px-2 py-1 rounded-full bg-cream text-ink hover:bg-ink hover:text-cream transition">调用日志</button>
+            </div>
+          </div>
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-ink mb-1">红狐 API Key（REDFOX_API_KEY）</label>
+              <input id="redfoxApiKey" type="password" placeholder="ak_..." class="w-full px-4 py-2.5 rounded-xl text-ink text-sm">
+              <p class="text-xs text-warmgray mt-1">用于拉取小红书真实爆款、封面、榜单、对标账号。</p>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-ink mb-1">大模型 API Base URL</label>
+              <input id="baseUrl" type="text" placeholder="https://work.xclawxx.top/v1" class="w-full px-4 py-2.5 rounded-xl text-ink text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-ink mb-1">大模型 API Key</label>
+              <input id="apiKey" type="password" placeholder="sk-..." class="w-full px-4 py-2.5 rounded-xl text-ink text-sm">
+              <p class="text-xs text-warmgray mt-1">用于 AI 调研、蒸馏、选题、生成、质检。</p>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-ink mb-1">模型</label>
+              <select id="modelSelect" class="w-full px-4 py-2.5 rounded-xl text-ink text-sm">
+                <option value="Auto">Auto（推荐）</option>
+              </select>
+            </div>
+            <div class="flex gap-3 pt-2">
+              <button onclick="saveApiConfig()" id="saveConfigBtn" class="btn-primary flex-1 py-2.5 rounded-xl text-sm font-medium">保存配置到浏览器</button>
+              <button onclick="clearApiConfig()" class="px-4 py-2.5 rounded-xl border border-ink text-ink text-sm font-medium hover:bg-ink hover:text-cream transition">清除</button>
+            </div>
+          </div>
+          <!-- 调用日志面板（用于自查接口是否被调用、红狐是否消耗积分） -->
+          <div id="callLogsPanel" class="hidden mt-4 border-t border-cream pt-4">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-sm font-bold text-ink">最近接口调用日志</h3>
+              <button onclick="loadCallLogs()" class="text-xs px-2 py-1 rounded-lg bg-cream text-ink hover:bg-ink hover:text-cream transition">刷新</button>
+            </div>
+            <div id="callLogsBox" class="max-h-64 overflow-y-auto space-y-2 text-xs"></div>
+          </div>
+        </div>
+
+        <!-- Step 0: 选题工坊 -->
+        <div class="bg-white rounded-2xl p-6 card-shadow">
+          <h2 class="text-lg font-bold text-ink mb-4 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-gold text-white flex items-center justify-center text-sm">0</span>
+            选题工坊 · 帮你找到方向
+          </h2>
+          <p class="text-xs text-warmgray mb-3">不知道写什么？从纳瓦尔主题 × 女性成长场景里挑一个，自动配好金句、切口、语气、角度、标签。</p>
+          <div class="flex gap-3 mb-3">
+            <input id="ideateSeed" type="text" placeholder="输入种子词，如：注意力、金钱、30岁，或留空随机" class="flex-1 px-4 py-3 rounded-xl text-ink text-sm">
+            <select id="ideateCountSelect" class="px-3 py-3 rounded-xl text-ink text-sm bg-paper border border-cream" title="每次生成数量">
+              <option value="10">10条</option>
+              <option value="20">20条</option>
+              <option value="50" selected>50条</option>
+              <option value="100">100条</option>
+              <option value="200">200条</option>
+            </select>
+            <button onclick="doRecommend()" id="recommendBtn" class="btn-ai px-5 py-3 rounded-xl font-medium whitespace-nowrap flex items-center gap-1">
+              ✨ 智能选题 Top10
+            </button>
+            <button onclick="doIdeate()" id="ideateBtn" class="px-5 py-3 rounded-xl font-medium whitespace-nowrap bg-paper text-ink border border-cream hover:bg-cream transition">
+              批量生成
+            </button>
+          </div>
+          <label class="flex items-center gap-2 text-xs text-ink mb-3 cursor-pointer select-none">
+            <input id="ideateRedfox" type="checkbox" class="w-4 h-4 accent-ochre rounded" checked>
+            <span>结合小红书<span class="text-ochre font-medium">真实爆款</span>反向选题意（<b>勾选后强制调用红狐实时数据</b>，消耗积分）</span>
+          </label>
+          <!-- 选题库面板 -->
+          <div class="bg-cream rounded-xl p-3 mb-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-ink">选题库</span>
+                <span id="bankCount" class="text-xs px-2 py-0.5 rounded-full bg-white text-ochre font-medium">0 条</span>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="loadIdeaBank()" class="text-xs px-3 py-1.5 rounded-lg bg-white text-ink hover:bg-ink hover:text-cream transition">刷新</button>
+                <button onclick="exportIdeaBank()" class="text-xs px-3 py-1.5 rounded-lg bg-white text-ink hover:bg-ink hover:text-cream transition">导出.md</button>
+                <button onclick="clearIdeaBank()" class="text-xs px-3 py-1.5 rounded-lg bg-white text-red-600 hover:bg-red-50 transition">清空</button>
+              </div>
+            </div>
+            <div id="bankFilterBox" class="mt-2 hidden">
+              <div id="bankStatusChips" class="flex flex-wrap gap-1.5 mb-2 text-[11px]">
+                <button data-status="all" onclick="setBankStatus('all')" class="bank-chip px-2 py-0.5 rounded-full bg-ochre text-white">全部 <span id="bankCountAll">0</span></button>
+                <button data-status="draft" onclick="setBankStatus('draft')" class="bank-chip px-2 py-0.5 rounded-full bg-white text-ink hover:bg-ink hover:text-cream transition">草稿 <span id="bankCountDraft">0</span></button>
+                <button data-status="used" onclick="setBankStatus('used')" class="bank-chip px-2 py-0.5 rounded-full bg-white text-ink hover:bg-ink hover:text-cream transition">已用 <span id="bankCountUsed">0</span></button>
+                <button data-status="archived" onclick="setBankStatus('archived')" class="bank-chip px-2 py-0.5 rounded-full bg-white text-ink hover:bg-ink hover:text-cream transition">归档 <span id="bankCountArchived">0</span></button>
+              </div>
+              <input id="bankFilter" type="text" placeholder="筛选选题库..." oninput="filterIdeaBank()" class="w-full px-3 py-2 rounded-lg text-xs text-ink bg-white">
+              <!-- 批量操作工具条 -->
+              <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
+                <label class="flex items-center gap-1 cursor-pointer select-none text-ink">
+                  <input type="checkbox" id="bankSelectAll" onchange="toggleBankSelectAll()" class="accent-ochre w-3.5 h-3.5">
+                  <span>全选</span>
+                </label>
+                <span class="text-warmgray">|</span>
+                <span id="bankSelectedCount" class="text-ochre font-medium">已选 0 条</span>
+                <span class="flex-1"></span>
+                <button onclick="batchGenerateBank()" class="px-2 py-1 rounded bg-ochre text-white hover:opacity-90 transition" title="按当前生成模式批量生成">批量生成</button>
+                <button onclick="batchActionBank('used')" class="px-2 py-1 rounded bg-white text-ink border border-cream hover:bg-cream transition">标记已用</button>
+                <button onclick="batchActionBank('archived')" class="px-2 py-1 rounded bg-white text-ink border border-cream hover:bg-cream transition">归档</button>
+                <button onclick="batchActionBank('delete')" class="px-2 py-1 rounded bg-white text-red-600 border border-cream hover:bg-red-50 transition">删除</button>
+                <button onclick="batchExportBank()" class="px-2 py-1 rounded bg-white text-ink border border-cream hover:bg-cream transition">导出选中</button>
+              </div>
+              <div id="bankList" class="mt-2 max-h-80 overflow-y-auto space-y-2"></div>
+            </div>
+            <button onclick="toggleBankPanel()" id="bankToggleBtn" class="mt-2 text-xs text-ochre hover:underline">展开选题库 ▼</button>
+          </div>
+          <div id="ideateCard" class="hidden border-t border-cream pt-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-base font-bold text-ink flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-ochre text-white flex items-center justify-center text-xs">题</span>
+                推荐选题
+              </h3>
+              <span id="ideateCount" class="text-xs text-warmgray"></span>
+            </div>
+            <div id="ideateBox" class="space-y-3 max-h-80 overflow-y-auto"></div>
+          </div>
+        </div>
+
+        <!-- Step 1: Search + Research -->
+        <div class="bg-white rounded-2xl p-6 card-shadow">
+          <h2 class="text-lg font-bold text-ink mb-4 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-gold text-white flex items-center justify-center text-sm">1</span>
+            拉取真实爆款 + AI 调研蒸馏
+          </h2>
+          <div class="flex gap-3">
+            <input id="keyword" type="text" placeholder="输入关键词，如：注意力、多巴胺、财富自由..." 
+              class="flex-1 px-4 py-3 rounded-xl text-ink" value="注意力">
+            <button onclick="searchNotes()" id="searchBtn" class="btn-primary px-5 py-3 rounded-xl font-medium whitespace-nowrap">
+              拉取爆款
+            </button>
+            <button onclick="doResearch()" id="researchBtn" class="btn-ai px-5 py-3 rounded-xl font-medium whitespace-nowrap">
+              AI 调研
+            </button>
+          </div>
+          <div id="searchStatus" class="mt-3 text-sm text-warmgray hidden"></div>
+          <div id="hotList" class="mt-4 space-y-3 max-h-72 overflow-y-auto"></div>
+
+          <!-- 调研简报 -->
+          <div id="briefCard" class="mt-4 hidden border-t border-cream pt-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-base font-bold text-ink flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-ochre text-white flex items-center justify-center text-xs">研</span>
+                调研简报
+              </h3>
+              <button onclick="doDistill()" id="distillBtn" class="btn-secondary px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap">
+                生成差异化策略
+              </button>
+            </div>
+            <div id="briefBox" class="text-sm text-ink space-y-3"></div>
+            <!-- 差异化策略 -->
+            <div id="strategyCard" class="mt-4 hidden border-t border-cream pt-4">
+              <h3 class="text-base font-bold text-ink flex items-center gap-2 mb-3">
+                <span class="w-5 h-5 rounded-full bg-gold text-white flex items-center justify-center text-xs">策</span>
+                差异化内容策略
+              </h3>
+              <div id="strategyBox" class="text-sm text-ink space-y-3"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Angle -->
+        <div class="bg-white rounded-2xl p-6 card-shadow">
+          <h2 class="text-lg font-bold text-ink mb-4 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-gold text-white flex items-center justify-center text-sm">2</span>
+            确定角度与切口
+          </h2>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-ink mb-2">选题关键词（生成标题用）</label>
+              <input id="topic" type="text" placeholder="如：注意力" onchange="autoLoadCoreQuotes()" class="w-full px-4 py-3 rounded-xl text-ink">
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="block text-sm font-medium text-ink">纳瓦尔金句（文章核心钩子）</label>
+                <button type="button" onclick="loadCoreQuotes()" id="refreshCoreQuotesBtn" class="text-xs px-2 py-1 rounded-lg bg-cream text-ink hover:bg-gold hover:text-white transition">🔄 换一换金句</button>
+              </div>
+              <input id="hook" type="text" placeholder="如：财富是你睡觉时仍在赚钱的资产" class="w-full px-4 py-3 rounded-xl text-ink">
+              <div id="coreQuotesBox" class="mt-2 flex flex-wrap gap-2"></div>
+              <p class="text-xs text-warmgray mt-1">推荐金句均来自纳瓦尔真实思想库，会根据你的选题自动匹配最相关的主题；点击即可填入。</p>
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="block text-sm font-medium text-ink">真实切口（你的人味来源，必填）</label>
+                <button type="button" onclick="refreshCut()" id="refreshCutBtn" class="text-xs px-2 py-1 rounded-lg bg-cream text-ink hover:bg-gold hover:text-white transition">🔄 换一换切口</button>
+              </div>
+              <textarea id="cut" rows="3" placeholder="写一段你自己的真实经历，比如：我曾经睡前刷3小时短视频，直到某天醒来眼睛疼到睁不开..." 
+                class="w-full px-4 py-3 rounded-xl text-ink resize-none"></textarea>
+              <p class="text-xs text-warmgray mt-2">越有细节越有人味。不要写道理，写画面、写情绪、写改变。点击"换一换"会从 AI/素材库换一批真实切口。</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Voice & Insight -->
+        <div class="bg-white rounded-2xl p-6 card-shadow">
+          <h2 class="text-lg font-bold text-ink mb-4 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-gold text-white flex items-center justify-center text-sm">3</span>
+            选择语气与独到见解
+          </h2>
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-xs text-warmgray">根据选题自动匹配最贴合的语气和见解角度</p>
+            <button onclick="autoMatchVoiceInsight()" id="autoMatchVoiceBtn" class="text-xs px-3 py-1.5 rounded-lg bg-ochre/10 text-ochre hover:bg-ochre hover:text-white transition flex items-center gap-1">
+              <span>✨</span><span>自动匹配语气 & 见解</span>
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-medium text-ink mb-2">说话语气</label>
+              <select id="voice" class="w-full px-4 py-3 rounded-xl text-ink">
+                <option value="清醒陪伴型">清醒陪伴型 · 先共情再点破</option>
+                <option value="反骨警示型">反骨警示型 · 直接打脸不给逃避</option>
+                <option value="温柔坚定型">温柔坚定型 · 语气软立场硬</option>
+                <option value="算账拆解型">算账拆解型 · 把情绪翻译成数字</option>
+                <option value="故事共鸣型">故事共鸣型 · 先讲故事再讲道理</option>
+                <option value="观点刺穿型">观点刺穿型 · 一句话点破本质</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-ink mb-2">独到见解角度</label>
+              <select id="insight" class="w-full px-4 py-3 rounded-xl text-ink">
+                <option value="反常识">反常识 · 大多数人的认知是反的</option>
+                <option value="女性专属">女性专属 · 对女生的掠夺更隐蔽</option>
+                <option value="算账视角">算账视角 · 把抽象概念量化</option>
+                <option value="亲身经历">亲身经历 · 用真实故事替代说教</option>
+                <option value="二元对立">二元对立 · 廉价多巴胺 vs 复利</option>
+                <option value="身份重构">身份重构 · 你不是懒，你是被设计</option>
+              </select>
+            </div>
+          </div>
+          <button onclick="generateNote()" id="genBtn" class="btn-ai w-full py-3 rounded-xl font-bold text-base">
+            生成女性向人味长图文
+          </button>
+          <p class="text-xs text-warmgray mt-2 text-center">若已做 AI 调研/蒸馏，生成时会自动注入真实案例与差异化策略。</p>
+        </div>
+
+        <!-- Step 4: 首条评论 -->
+        <div class="bg-white rounded-2xl p-6 card-shadow">
+          <h2 class="text-lg font-bold text-ink mb-4 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-gold text-white flex items-center justify-center text-sm">4</span>
+            生成首条评论 · 引发深度讨论
+          </h2>
+          <p class="text-xs text-warmgray mb-3">为刚生成的文章写一条"置顶首评"：不复述原文，而是提出启发观点 / 合理质疑 / 延伸视角，引导读者突破表层、主动接话。文章标题需不超过 20 个字符（小红书硬性上限）。</p>
+          <div class="mb-3">
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-sm font-medium text-ink">文章标题（不超过 20 字）</label>
+              <span id="commentTitleCount" class="text-xs text-warmgray">0 / 20</span>
+            </div>
+            <input id="commentTitle" type="text" maxlength="40" placeholder="如：别再把注意力贱卖了" oninput="checkCommentTitleLen()" class="w-full px-4 py-3 rounded-xl text-ink">
+            <div class="flex items-center justify-between mt-1">
+              <p id="commentTitleWarn" class="text-xs text-red-600 hidden">⚠️ 标题需不超过 20 个字符，请精简。</p>
+              <button type="button" onclick="shortenCommentTitle()" id="shortenTitleBtn" class="text-xs px-2 py-1 rounded-lg bg-cream text-ink hover:bg-gold hover:text-white transition hidden">✂️ AI 精简标题</button>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-ink mb-2">文章正文（用于把握议题与风格，可编辑）</label>
+            <textarea id="commentBody" rows="6" placeholder="粘贴/导入刚生成的文章正文，留空则仅依据标题生成" class="w-full px-4 py-3 rounded-xl text-ink resize-none"></textarea>
+            <p class="text-xs text-warmgray mt-1">建议填入正文，评论会更贴合文章语气与议题。</p>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-medium text-ink mb-2">评论语气风格</label>
+              <select id="commentVoice" class="w-full px-4 py-3 rounded-xl text-ink">
+                <option value="清醒陪伴型">清醒陪伴型 · 先共情再点破</option>
+                <option value="反骨警示型">反骨警示型 · 直接打脸不给逃避</option>
+                <option value="温柔坚定型">温柔坚定型 · 语气软立场硬</option>
+                <option value="算账拆解型">算账拆解型 · 把情绪翻译成数字</option>
+                <option value="故事共鸣型">故事共鸣型 · 先讲故事再讲道理</option>
+                <option value="观点刺穿型">观点刺穿型 · 一句话点破本质</option>
+                <option value="">沿用文章语气（自动判断）</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-ink mb-2">深度策略</label>
+              <select id="commentStrategy" class="w-full px-4 py-3 rounded-xl text-ink">
+                <option value="">自动（让 AI 判断）</option>
+                <option value="观点延伸">观点延伸 · 往前再推一步</option>
+                <option value="合理质疑">合理质疑 · 温和但有力的一问</option>
+                <option value="延伸视角">延伸视角 · 换文章没覆盖的角度</option>
+                <option value="开放反问">开放反问 · 把话筒交还读者</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button onclick="doFirstComment()" id="commentBtn" class="btn-ai px-5 py-3 rounded-xl font-medium whitespace-nowrap">
+              生成首条评论
+            </button>
+            <button onclick="importArticleToComment()" class="px-4 py-3 rounded-xl border border-ink text-ink text-sm font-medium hover:bg-ink hover:text-cream transition whitespace-nowrap">
+              导入已生成文章
+            </button>
+          </div>
+          <div id="commentCard" class="hidden mt-4 border-t border-cream pt-4">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-base font-bold text-ink flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-ochre text-white flex items-center justify-center text-xs">评</span>
+                置顶首评
+              </h3>
+              <button onclick="copyFirstComment()" class="text-xs px-3 py-1.5 rounded-lg bg-white text-ink hover:bg-ink hover:text-cream transition">复制</button>
+            </div>
+            <div id="commentBox" class="text-sm text-ink leading-relaxed whitespace-pre-wrap bg-cream rounded-xl p-4"></div>
+            <p id="commentSource" class="text-xs text-warmgray mt-2"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Preview -->
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-ink">小红书图文预览</h2>
+          <div class="flex gap-2">
+            <span id="modeBadge" class="text-xs px-2 py-1 rounded-full bg-cream text-warmgray hidden"></span>
+            <button onclick="doQC()" id="qcBtn" class="px-4 py-2 rounded-lg border border-ochre text-ochre text-sm font-medium hover:bg-ochre hover:text-cream transition" disabled>质检</button>
+            <button onclick="copyCaption()" id="copyCaptionBtn" class="px-4 py-2 rounded-lg border border-ochre text-ochre text-sm font-medium hover:bg-ochre hover:text-cream transition" disabled>复制详情页文字</button>
+            <button onclick="copyMarkdown()" id="copyBtn" class="px-4 py-2 rounded-lg border border-ink text-ink text-sm font-medium hover:bg-ink hover:text-cream transition" disabled>复制完整帖子</button>
+            <button onclick="downloadMarkdown()" id="dlBtn" class="px-4 py-2 rounded-lg border border-ink text-ink text-sm font-medium hover:bg-ink hover:text-cream transition" disabled>导出 .md</button>
+            <button onclick="copyImportText()" id="copyImportBtn" class="px-4 py-2 rounded-lg border border-gold text-gold text-sm font-medium hover:bg-gold hover:text-ink transition" disabled>复制纳瓦尔格式</button>
+            <button onclick="downloadImportText()" id="dlImportBtn" class="px-4 py-2 rounded-lg border border-gold text-gold text-sm font-medium hover:bg-gold hover:text-ink transition" disabled>导出纳瓦尔格式.md</button>
+            <button onclick="doTitleScore()" id="tsBtn" class="px-4 py-2 rounded-lg text-sm font-medium transition" style="border:1px solid #ff2442;color:#ff2442" disabled>标题评分(红狐)</button>
+            <button onclick="doNoteAnalyze()" id="naBtn" class="px-4 py-2 rounded-lg text-sm font-medium transition" style="border:1px solid #ff2442;color:#ff2442" disabled>笔记体检(红狐)</button>
+          </div>
+        </div>
+        <!-- 帖子结构体系：五要素 -->
+        <div id="structCard" class="mb-4 hidden bg-white rounded-2xl p-5 card-shadow border-l-4 border-gold">
+          <h3 class="text-base font-bold text-ink flex items-center gap-2 mb-3">
+            <span class="w-5 h-5 rounded-full bg-gold text-white flex items-center justify-center text-xs">构</span>
+            帖子结构体系（五要素）
+          </h3>
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-ink mb-1">① 封面 / 详情页标题 <span class="text-warmgray">（封面=详情页，自动一致）</span></label>
+              <input id="fTitle" type="text" class="w-full px-3 py-2 rounded-lg text-ink text-sm" oninput="onStructEdit()">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-ink mb-1">② 核心观点 <span class="text-warmgray">（反常识论点，贯穿全文）</span></label>
+              <textarea id="fCore" rows="2" class="w-full px-3 py-2 rounded-lg text-ink text-sm resize-none" oninput="onStructEdit()"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-ink mb-1">③ 标签 <span class="text-warmgray">（身份/方法论/结果/平台热词 四层）</span></label>
+              <input id="fTags" type="text" class="w-full px-3 py-2 rounded-lg text-ink text-sm" oninput="onStructEdit()">
+              <p id="tagLayering" class="text-xs text-warmgray mt-1"></p>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-ink mb-1">④ 详情页文字框 <span class="text-warmgray">（3 段约 400 字，只负责勾引用户左滑看图）</span></label>
+              <textarea id="fCaption" rows="4" class="w-full px-3 py-2 rounded-lg text-ink text-sm resize-none" oninput="onStructEdit()"></textarea>
+            </div>
+            <p class="text-xs text-warmgray">⑤ 图文轮播正文见下方预览，可直接复制完整帖子或单独复制详情页文字。</p>
+          </div>
+        </div>
+        <div id="qcCard" class="mb-4 hidden bg-white rounded-2xl p-5 card-shadow"></div>
+        <div id="redfoxScoreCard" class="mb-4 hidden bg-white rounded-2xl p-5 card-shadow"></div>
+        <div id="noteAnalyzeCard" class="mb-4 hidden bg-white rounded-2xl p-5 card-shadow"></div>
+        <div id="previewArea" class="pb-8">
+          <div class="text-center py-20 text-warmgray">
+            <p>左侧输入关键词并点击生成，这里会出现 6 页小红书长图文预览</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentMarkdown = '';
+    let currentTitle = '';
+    let currentMode = 'ai';
+    let configLoaded = false;
+    let currentBrief = null;
+    let currentStrategy = null;
+    let currentPost = { cover_title: '', detail_title: '', core_viewpoint: '', tags: '', tags_list: [], body: '', pages: [] };
+    let currentParams = { topic: '', hook: '', voice: '清醒陪伴型', insight: '反常识', cut: '' };
+    let currentQCReport = null;
+
+    function loadStoredConfig() {
+      try {
+        const stored = localStorage.getItem('xhs_pipeline_config');
+        if (stored) return JSON.parse(stored);
+      } catch (e) {}
+      return {};
+    }
+
+    function saveStoredConfig(cfg) {
+      try {
+        localStorage.setItem('xhs_pipeline_config', JSON.stringify(cfg));
+      } catch (e) {}
+    }
+
+    async function applyConfigToServer(cfg) {
+      try {
+        await fetch('/api/config/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            redfox_api_key: cfg.redfox_api_key || '',
+            openai_base: cfg.openai_base || '',
+            openai_key: cfg.openai_key || '',
+            default_model: cfg.default_model || 'Auto',
+          })
+        });
+      } catch (e) { console.error('热更新服务端配置失败', e); }
+    }
+
+    function updateConfigStatus(cfg, serverRedfoxConfigured) {
+      const rfStatus = document.getElementById('redfoxStatus');
+      const aiStatus = document.getElementById('keyStatus');
+      if (cfg.redfox_api_key) {
+        rfStatus.textContent = '红狐：已配置（浏览器）';
+        rfStatus.className = 'text-xs px-2 py-1 rounded-full bg-green-100 text-green-700';
+      } else if (serverRedfoxConfigured) {
+        // 浏览器输入框为空，但服务端 winreg 能解析到 Windows 用户级 REDFOX_API_KEY
+        rfStatus.textContent = '红狐：已由系统配置';
+        rfStatus.className = 'text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700';
+      } else {
+        rfStatus.textContent = '红狐：未配置';
+        rfStatus.className = 'text-xs px-2 py-1 rounded-full bg-red-100 text-red-700';
+      }
+      if (cfg.openai_key) {
+        aiStatus.textContent = '大模型：已配置';
+        aiStatus.className = 'text-xs px-2 py-1 rounded-full bg-green-100 text-green-700';
+      } else {
+        aiStatus.textContent = '大模型：未配置';
+        aiStatus.className = 'text-xs px-2 py-1 rounded-full bg-red-100 text-red-700';
+      }
+    }
+
+    async function saveApiConfig() {
+      const cfg = {
+        redfox_api_key: document.getElementById('redfoxApiKey').value.trim(),
+        openai_base: document.getElementById('baseUrl').value.trim(),
+        openai_key: document.getElementById('apiKey').value.trim(),
+        default_model: document.getElementById('modelSelect').value,
+      };
+      saveStoredConfig(cfg);
+      await applyConfigToServer(cfg);
+      // 保存后重新拉服务端真实配置状态（winreg 可能仍解析到系统级 key）
+      try {
+        const cfgRes = await fetch('/api/config');
+        const serverCfg = await cfgRes.json();
+        updateConfigStatus(cfg, serverCfg.redfox_key_configured);
+      } catch (e) {
+        updateConfigStatus(cfg);
+      }
+      alert('配置已保存到浏览器，并已热更新到服务端');
+    }
+
+    function clearApiConfig() {
+      localStorage.removeItem('xhs_pipeline_config');
+      document.getElementById('redfoxApiKey').value = '';
+      document.getElementById('baseUrl').value = '';
+      document.getElementById('apiKey').value = '';
+      document.getElementById('modelSelect').value = 'Auto';
+      applyConfigToServer({ redfox_api_key: '', openai_base: '', openai_key: '', default_model: 'Auto' });
+      updateConfigStatus({});
+    }
+
+    // 初始化：拉取服务端配置，合并本地存储，热更新到服务端
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const cfgRes = await fetch('/api/config');
+        const serverCfg = await cfgRes.json();
+        let storedCfg = loadStoredConfig();
+
+        // 关键修复：旧版本曾把服务端返回的 mask_key(...) 存入 localStorage 并当作真实 key 使用，
+        // 导致浏览器把脱敏 key（如 ak_7cbb...046a）传回服务端，红狐鉴权失败、后台无调用记录。
+        // 此处强制清理任何看起来像脱敏的 key，只用用户真实输入或留空由服务端 winreg 解析。
+        if (storedCfg.redfox_api_key && /\.{3,}|\*{3,}/.test(storedCfg.redfox_api_key)) {
+          console.warn('检测到 localStorage 中存的是脱敏红狐 key，已清理');
+          storedCfg.redfox_api_key = '';
+          saveStoredConfig(storedCfg);
+        }
+
+        const cfg = {
+          // 红狐 key 不再使用 serverCfg.redfox_key_masked（那是脱敏展示值）
+          redfox_api_key: storedCfg.redfox_api_key || '',
+          openai_base: storedCfg.openai_base || serverCfg.openai_base || '',
+          openai_key: storedCfg.openai_key || '',
+          default_model: storedCfg.default_model || serverCfg.default_model || 'Auto',
+        };
+
+        document.getElementById('redfoxApiKey').value = cfg.redfox_api_key;
+        document.getElementById('baseUrl').value = cfg.openai_base;
+        document.getElementById('apiKey').value = cfg.openai_key;
+        document.getElementById('modelSelect').value = cfg.default_model;
+
+        await applyConfigToServer(cfg);
+        updateConfigStatus(cfg, serverCfg.redfox_key_configured);
+        configLoaded = true;
+
+        const modelsRes = await fetch('/api/models');
+        const modelsData = await modelsRes.json();
+        const select = document.getElementById('modelSelect');
+        if (modelsData.models && modelsData.models.length) {
+          select.innerHTML = '<option value="Auto">Auto（推荐）</option>' +
+            modelsData.models.map(m => `<option value="${m}">${m}</option>`).join('');
+        }
+        // 页面加载后不再自动调用选题，避免未勾选/未准备时消耗红狐积分
+        loadIdeaBank();
+        loadNetworkInfo();
+      } catch (e) {
+        console.error('配置加载失败', e);
+      }
+    });
+
+    // ---------- 多设备访问：局域网地址 + 二维码 + 公网隧道 ----------
+    async function loadNetworkInfo() {
+      try {
+        const res = await fetch('/api/network');
+        const data = await res.json();
+        const url = data.lan_url || data.localhost_url;
+        const el = document.getElementById('lanUrl');
+        if (el) el.textContent = url;
+        const qr = document.getElementById('qrImg');
+        if (qr) qr.src = '/api/qr?text=' + encodeURIComponent(url);
+        const hint = document.getElementById('lanHint');
+        if (hint) {
+          hint.textContent = (data.host === '0.0.0.0')
+            ? '已监听局域网，同一 Wi-Fi 下的手机/其他电脑可直接访问上面的地址。'
+            : '当前仅本机访问，设置环境变量 HOST=0.0.0.0 后可让局域网设备访问。';
+        }
+        // 公网隧道地址
+        try {
+          const t = await fetch('/api/tunnel');
+          const td = await t.json();
+          const pub = document.getElementById('pubUrl');
+          if (pub) {
+            if (td.ready && td.tunnel_url) {
+              pub.textContent = td.tunnel_url;
+            } else {
+              pub.textContent = '隧道未启动（运行 launch_all.bat 或安装自启后自动生成）';
+            }
+          }
+        } catch (e2) {
+          const pub = document.getElementById('pubUrl');
+          if (pub) pub.textContent = '暂不可用';
+        }
+      } catch (e) {
+        console.error('获取网络信息失败', e);
+      }
+    }
+
+    function copyLanUrl() {
+      const el = document.getElementById('lanUrl');
+      const url = el ? el.textContent : '';
+      if (!url || url === '检测中…') return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          alert('已复制：' + url);
+        }).catch(() => {
+          window.prompt('复制下面的链接：', url);
+        });
+      } else {
+        window.prompt('复制下面的链接：', url);
+      }
+    }
+
+    function copyPubUrl() {
+      const el = document.getElementById('pubUrl');
+      const url = el ? el.textContent : '';
+      if (!url || url.indexOf('http') !== 0) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          alert('已复制公网地址：' + url);
+        }).catch(() => {
+          window.prompt('复制下面的链接：', url);
+        });
+      } else {
+        window.prompt('复制下面的链接：', url);
+      }
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById('modeTemplate').classList.toggle('active', mode === 'template');
+      document.getElementById('modeAI').classList.toggle('active', mode === 'ai');
+      const desc = document.getElementById('modeDesc');
+      if (mode === 'ai') {
+        desc.innerHTML = 'AI 现写：每次调用大模型重新创作，输出更鲜活、更有独到见解，但耗 API 额度。';
+        document.getElementById('genBtn').className = 'btn-ai w-full py-3 rounded-xl font-bold text-base';
+      } else {
+        desc.innerHTML = '模板模式：按预设结构秒出草稿，速度快、稳定、不耗 AI 额度。';
+        document.getElementById('genBtn').className = 'btn-secondary w-full py-3 rounded-xl font-bold text-base';
+      }
+    }
+
+    function setLoading(id, loading) {
+      const btn = document.getElementById(id);
+      if (loading) {
+        if (!btn.dataset.label) btn.dataset.label = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span>处理中...';
+      } else {
+        btn.disabled = false;
+        btn.innerHTML = btn.dataset.label || btn.innerHTML;
+      }
+    }
+
+    function apiCreds() {
+      return {
+        redfox_api_key: document.getElementById('redfoxApiKey').value.trim(),
+        base_url: document.getElementById('baseUrl').value.trim(),
+        api_key: document.getElementById('apiKey').value.trim(),
+        model: document.getElementById('modelSelect').value,
+      };
+    }
+
+    async function searchNotes() {
+      const keyword = document.getElementById('keyword').value.trim();
+      if (!keyword) return alert('请输入关键词');
+      setLoading('searchBtn', true);
+      const status = document.getElementById('searchStatus');
+      status.classList.remove('hidden');
+      status.textContent = '正在调用红狐接口拉取真实爆款数据...';
+      try {
+        const creds = apiCreds();
+        const res = await fetch('/api/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ keyword, redfox_api_key: creds.redfox_api_key })
+        });
+        const data = await res.json();
+        if (data.error) {
+          status.textContent = '接口异常：' + data.error;
+          status.classList.add('text-red-600');
+          document.getElementById('hotList').innerHTML = '';
+          return;
+        }
+        renderHotList(data.items || []);
+        status.textContent = `成功拉取 ${data.items?.length || 0} 条真实爆款，点击可自动填充选题与金句`;
+        status.classList.remove('text-red-600');
+      } catch (e) {
+        status.textContent = '请求失败：' + e.message;
+        status.classList.add('text-red-600');
+      } finally {
+        setLoading('searchBtn', false);
+      }
+    }
+
+    function renderHotList(items) {
+      const container = document.getElementById('hotList');
+      if (!items.length) {
+        container.innerHTML = '<p class="text-sm text-warmgray">暂无数据，换个关键词试试</p>';
+        return;
+      }
+      container.innerHTML = items.slice(0, 8).map((it, idx) => `
+        <div class="p-3 rounded-xl bg-cream cursor-pointer hover:bg-opacity-80 transition border border-transparent hover:border-gold"
+             onclick="fillFromHot(${idx})">
+          <div class="flex justify-between items-start gap-2">
+            <h3 class="text-sm font-medium text-ink leading-relaxed line-clamp-2">${escapeHtml(it.title)}</h3>
+            <span class="text-xs text-warmgray whitespace-nowrap">👍${formatNum(it.likedCount)} ⭐${formatNum(it.collectedCount)}</span>
+          </div>
+          <div class="mt-2 text-xs text-warmgray flex justify-between">
+            <span>@${escapeHtml(it.authorNickname)} ${it.authorFans ? '('+it.authorFans+'粉)' : ''}</span>
+          </div>
+        </div>
+      `).join('');
+      window.hotItems = items;
+    }
+
+    function fillFromHot(idx) {
+      const it = window.hotItems[idx];
+      document.getElementById('topic').value = document.getElementById('keyword').value;
+      document.getElementById('hook').value = it.title || '';
+    }
+
+    // ---------- 调用日志 ----------
+    function toggleCallLogs() {
+      const panel = document.getElementById('callLogsPanel');
+      if (panel.classList.contains('hidden')) {
+        panel.classList.remove('hidden');
+        loadCallLogs();
+      } else {
+        panel.classList.add('hidden');
+      }
+    }
+
+    async function loadCallLogs() {
+      const box = document.getElementById('callLogsBox');
+      box.innerHTML = '<p class="text-warmgray">加载中...</p>';
+      try {
+        const res = await fetch('/api/call-logs?limit=30');
+        const data = await res.json();
+        if (!data.logs || !data.logs.length) {
+          box.innerHTML = '<p class="text-warmgray">暂无调用记录</p>';
+          return;
+        }
+        box.innerHTML = data.logs.map(l => {
+          if (l.type === 'redfox') {
+            return `<div class="p-2 rounded bg-cream">
+              <div class="flex items-center gap-2">
+                <span class="px-1.5 py-0.5 rounded bg-ochre text-white">红狐</span>
+                <span class="font-medium text-ink">${escapeHtml(l.skill || '')}</span>
+                <span class="text-warmgray">${escapeHtml(l.time || '')}</span>
+                <span class="${l.ok ? 'text-green-600' : 'text-red-600'}">${l.ok ? '成功' : '失败'}</span>
+              </div>
+              <div class="text-warmgray mt-1">关键词：${escapeHtml((l.keyword || '').slice(0, 80))}${l.error ? ' · 错误：' + escapeHtml(l.error) : ''}</div>
+            </div>`;
+          }
+          return `<div class="p-2 rounded bg-cream">
+            <div class="flex items-center gap-2">
+              <span class="px-1.5 py-0.5 rounded bg-ink text-cream">${escapeHtml(l.method || '')}</span>
+              <span class="font-medium text-ink">${escapeHtml(l.path || '')}</span>
+              <span class="text-warmgray">${escapeHtml(l.time || '')}</span>
+              <span class="${l.status >= 200 && l.status < 300 ? 'text-green-600' : 'text-red-600'}">HTTP ${l.status}</span>
+            </div>
+            <div class="text-warmgray mt-1 truncate">参数：${escapeHtml((l.body || '').slice(0, 120))}</div>
+          </div>`;
+        }).join('');
+      } catch (e) {
+        box.innerHTML = '<p class="text-red-600">加载失败：' + escapeHtml(e.message) + '</p>';
+      }
+    }
+
+    // ---------- 选题工坊 ----------
+    async function doIdeate() {
+      const seed = document.getElementById('ideateSeed').value.trim();
+      const useRedfox = document.getElementById('ideateRedfox').checked;
+      const count = parseInt(document.getElementById('ideateCountSelect').value, 10) || 50;
+      const creds = apiCreds();
+      // 注意：服务端会优先用 winreg(HKCU\Environment) 的 REDFOX_API_KEY 作为权威来源解析真实 Key，
+      // 因此即使浏览器未填写 Key 也能调用红狐；此处不再硬性拦截，避免误伤正常使用。
+      if (useRedfox && !creds.redfox_api_key) {
+        console.info('浏览器未填写红狐 Key，将由服务端 winreg 解析真实 Key 调用红狐。');
+      }
+      setLoading('ideateBtn', true);
+      const card = document.getElementById('ideateCard');
+      card.classList.remove('hidden');
+      const box = document.getElementById('ideateBox');
+      box.innerHTML = useRedfox
+        ? '<p class="text-sm text-warmgray">正在强制调用红狐接口拉取真实爆款（消耗积分），再批量组合 ' + count + ' 条选题...</p>'
+        : '<p class="text-sm text-warmgray">正在从纳瓦尔主题 × 女性成长场景里生成选题...</p>';
+      try {
+        const res = await fetch('/api/ideate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            seed, count, use_redfox: useRedfox,
+            redfox_api_key: creds.redfox_api_key,
+            api_key: creds.api_key, base_url: creds.base_url, model: creds.model
+          })
+        });
+        const data = await res.json();
+        if (data.error) {
+          box.innerHTML = '<p class="text-sm text-red-600">选题工坊失败：' + data.error + '</p>';
+          return;
+        }
+        window.ideasData = data;
+        renderIdeas(data);
+        loadIdeaBank();
+      } catch (e) {
+        box.innerHTML = '<p class="text-sm text-red-600">请求失败：' + e.message + '</p>';
+      } finally {
+        setLoading('ideateBtn', false);
+      }
+    }
+
+    // 智能选题：从选题库草稿按综合分推荐 Top10，默认不消耗红狐积分；只在库严重不足时本地补生成。
+    async function doRecommend() {
+      const seed = document.getElementById('ideateSeed').value.trim();
+      const creds = apiCreds();
+      setLoading('recommendBtn', true);
+      const card = document.getElementById('ideateCard');
+      card.classList.remove('hidden');
+      const box = document.getElementById('ideateBox');
+      box.innerHTML = '<p class="text-sm text-warmgray">正在从选题库草稿里按综合分挑出最值得写的 Top10...</p>';
+      try {
+        const res = await fetch('/api/recommend', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            seed, count: 10, use_redfox: false,
+            redfox_api_key: creds.redfox_api_key,
+            api_key: creds.api_key, base_url: creds.base_url, model: creds.model
+          })
+        });
+        const data = await res.json();
+        if (data.error) {
+          box.innerHTML = '<p class="text-sm text-red-600">智能选题失败：' + data.error + '</p>';
+          return;
+        }
+        window.ideasData = data;
+        renderIdeas(data);
+        loadIdeaBank();
+      } catch (e) {
+        box.innerHTML = '<p class="text-sm text-red-600">请求失败：' + e.message + '</p>';
+      } finally {
+        setLoading('recommendBtn', false);
+      }
+    }
+
+    function renderIdeas(data) {
+      const box = document.getElementById('ideateBox');
+      box.innerHTML = '';
+      const srcLabel = data.source === 'redfox+ai'
+        ? '✅ 已调用红狐真实爆款 + AI/本地模板组合'
+        : data.source === 'recommend'
+          ? '✨ 智能选题（按综合分排序，草稿 ' + (data.draft_total !== undefined ? data.draft_total : '—') + ' 条）'
+          : '📚 本地纳瓦尔主题矩阵';
+      const bankInfo = (data.bank_total !== undefined)
+        ? ` · 选题库累计 ${data.bank_total} 条（本次新增 ${data.bank_new || 0} 条）`
+        : '';
+      document.getElementById('ideateCount').textContent = `共 ${data.count} 个推荐 · ${srcLabel}${bankInfo}`;
+      if (data.warn) {
+        box.innerHTML += `<p class="text-xs text-amber-600 mb-2">⚠️ ${escapeHtml(data.warn)}</p>`;
+      }
+      if (data.hot_titles && data.hot_titles.length) {
+        box.innerHTML += `<details class="mb-3 text-xs text-warmgray"><summary class="cursor-pointer text-ochre">🔥 参考的真实爆款标题（${data.hot_titles.length}）</summary><ul class="mt-1 space-y-0.5 pl-4 list-disc">${data.hot_titles.map(t => `<li>${escapeHtml(t)}</li>`).join('')}</ul></details>`;
+      }
+      if (!data.ideas || !data.ideas.length) {
+        box.innerHTML += '<p class="text-sm text-warmgray">暂无推荐，换个种子词试试</p>';
+        return;
+      }
+      box.innerHTML += data.ideas.map((it, idx) => {
+        const comp = (it.composite !== undefined && it.composite !== null) ? Math.round(it.composite * 100) : null;
+        const compBadge = comp !== null ? `<span class="text-[10px] text-white bg-gradient-to-r from-ochre to-gold px-2 py-0.5 rounded-full whitespace-nowrap">★ ${comp}</span>` : '';
+        const reason = it.reason ? `<p class="text-[10px] text-amber-700 mb-1.5 line-clamp-1">💡 推荐理由：${escapeHtml(it.reason)}</p>` : '';
+        const statusBadge = it.status === 'used' ? '<span class="text-[10px] text-warmgray bg-white px-1.5 py-0.5 rounded">已用</span>'
+          : it.status === 'archived' ? '<span class="text-[10px] text-warmgray bg-white px-1.5 py-0.5 rounded">归档</span>' : '';
+        return `
+        <div class="p-3 rounded-xl bg-cream border border-transparent hover:border-gold cursor-pointer transition idea-card"
+             onclick="fillFromIdea(${idx})">
+          <div class="flex justify-between items-start gap-2 mb-2">
+            <h3 class="text-sm font-bold text-ink leading-relaxed">${escapeHtml(it.scene || it.topic)}</h3>
+            <div class="flex items-center gap-1 whitespace-nowrap">
+              ${compBadge}
+              <span class="text-xs ${it.source === 'redfox+ai' ? 'text-ochre' : 'text-warmgray'} bg-white px-2 py-0.5 rounded-full">纳瓦尔·${escapeHtml(it.naval_theme || it.theme || '核心')}</span>
+              ${statusBadge}
+            </div>
+          </div>
+          ${reason}
+          <p class="text-xs text-ink mb-1 line-clamp-2">💡 ${escapeHtml(it.naval_quote)}</p>
+          <p class="text-xs text-warmgray mb-2 line-clamp-2">✂️ ${escapeHtml(it.cut_template || '')}</p>
+          <div class="flex flex-wrap items-center gap-1 text-[10px] text-warmgray">
+            <span class="bg-white px-1.5 py-0.5 rounded">${escapeHtml(it.recommended_voice)}</span>
+            <span class="bg-white px-1.5 py-0.5 rounded">${escapeHtml(it.recommended_insight)}</span>
+            <span class="bg-white px-1.5 py-0.5 rounded truncate max-w-[120px]">${escapeHtml(it.tags)}</span>
+            <button type="button" onclick="refreshCutForIdea(event, ${idx})" class="ml-auto px-2 py-0.5 rounded bg-ochre text-white hover:bg-gold transition">换切口</button>
+          </div>
+        </div>`;
+      }).join('');
+      window.ideas = data.ideas;
+    }
+
+    function markUsed(id, topic) {
+      // 选中并拿去生成 → 标记已用，参与闭环去重，后续智能选题不再推它
+      fetch('/api/idea-bank/mark-used', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id || '', topic: topic || '' })
+      }).then(() => loadIdeaBank()).catch(() => {});
+    }
+
+    function fillFromIdea(idx) {
+      const it = window.ideas[idx];
+      if (!it) return;
+      document.getElementById('keyword').value = it.topic;
+      document.getElementById('topic').value = it.topic;
+      document.getElementById('hook').value = it.naval_quote;
+      document.getElementById('cut').value = it.cut_template || '';
+      document.getElementById('voice').value = it.recommended_voice;
+      document.getElementById('insight').value = it.recommended_insight;
+      // 把选题锁定纳瓦尔主题透传给生成步骤，保证前后连贯不跑偏
+      window.currentIdeaTheme = it.naval_theme || it.theme || '';
+      markUsed(it.id, it.topic);
+      // 滚动到 Step 2 让用户看到已填充
+      document.getElementById('topic').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    async function refreshCutForIdea(event, idx) {
+      event.stopPropagation();
+      const it = window.ideas[idx];
+      if (!it) return;
+      const btn = event.currentTarget;
+      const originalText = btn.textContent;
+      btn.textContent = '...';
+      btn.disabled = true;
+      try {
+        const creds = apiCreds();
+        const used = window.ideas.map(x => x.cut_template).filter(Boolean);
+        const res = await fetch('/api/refresh-cut', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic: it.topic,
+            theme: it.theme,
+            scene: it.scene,
+            hot_title: it.hot_title || it.topic,
+            count: 1,
+            used_cuts: used,
+            voice: it.recommended_voice || '',
+            insight: it.recommended_insight || '',
+            hook: it.naval_quote || '',
+            core_quote: it.core_quote || '',
+            api_key: creds.api_key,
+            base_url: creds.base_url,
+            model: creds.model,
+          }),
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        if (data.cuts && data.cuts[0]) {
+          window.ideas[idx].cut_template = data.cuts[0];
+          // 如果当前已填充到 Step 2，同步更新
+          if (document.getElementById('topic').value === it.topic) {
+            document.getElementById('cut').value = data.cuts[0];
+          }
+          // 重渲染全部卡片，保留原始数据（warn/hot_titles/bank info）
+          if (window.ideasData) {
+            window.ideasData.ideas = window.ideas;
+            renderIdeas(window.ideasData);
+          }
+        }
+      } catch (e) {
+        alert('换切口失败：' + e.message);
+      } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    async function refreshCut() {
+      const topic = document.getElementById('topic').value.trim();
+      const cutEl = document.getElementById('cut');
+      const currentCut = cutEl.value.trim();
+      const btn = document.getElementById('refreshCutBtn');
+      btn.textContent = '换一换中...';
+      btn.disabled = true;
+      try {
+        const creds = apiCreds();
+        const voice = document.getElementById('voice').value || '';
+        const insight = document.getElementById('insight').value || '';
+        const hook = document.getElementById('hook').value.trim() || '';
+        const coreQuote = (currentBrief && currentBrief.core_quote) ? currentBrief.core_quote : '';
+        const res = await fetch('/api/refresh-cut', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic: topic,
+            theme: topic,
+            scene: topic,
+            hot_title: topic,
+            count: 1,
+            used_cuts: currentCut ? [currentCut] : [],
+            voice: voice,
+            insight: insight,
+            hook: hook,
+            core_quote: coreQuote,
+            api_key: creds.api_key,
+            base_url: creds.base_url,
+            model: creds.model,
+          }),
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        if (data.cuts && data.cuts[0]) {
+          cutEl.value = data.cuts[0];
+        }
+      } catch (e) {
+        alert('换切口失败：' + e.message);
+      } finally {
+        btn.textContent = '🔄 换一换切口';
+        btn.disabled = false;
+      }
+    }
+
+    // ---------- 核心金句推荐 ----------
+    let currentCoreQuotes = [];
+
+    function autoLoadCoreQuotes() {
+      const topic = document.getElementById('topic').value.trim();
+      if (topic) loadCoreQuotes();
+    }
+
+    async function loadCoreQuotes() {
+      const topic = document.getElementById('topic').value.trim() || document.getElementById('keyword').value.trim();
+      if (!topic) {
+        alert('请先输入选题关键词');
+        return;
+      }
+      const box = document.getElementById('coreQuotesBox');
+      const btn = document.getElementById('refreshCoreQuotesBtn');
+      const originalText = btn.textContent;
+      btn.textContent = '生成中...';
+      btn.disabled = true;
+      try {
+        const creds = apiCreds();
+        const res = await fetch('/api/core-quotes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic,
+            count: 8,
+            used_quotes: currentCoreQuotes,
+            api_key: creds.api_key,
+            base_url: creds.base_url,
+            model: creds.model,
+          }),
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        currentCoreQuotes = data.quotes || [];
+        renderCoreQuoteChips(currentCoreQuotes);
+      } catch (e) {
+        alert('生成金句失败：' + e.message);
+      } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    function renderCoreQuoteChips(quotes) {
+      const box = document.getElementById('coreQuotesBox');
+      if (!quotes || !quotes.length) {
+        box.innerHTML = '';
+        return;
+      }
+      box.innerHTML = quotes.map((q, i) => `
+        <button type="button" onclick="useCoreQuote(${i})"
+          class="text-xs px-2.5 py-1 rounded-full bg-cream text-ink hover:bg-gold hover:text-white transition text-left truncate max-w-[180px]"
+          title="${escapeHtml(q)}">${escapeHtml(q)}</button>
+      `).join('');
+    }
+
+    function useCoreQuote(idx) {
+      const q = currentCoreQuotes[idx];
+      if (q) document.getElementById('hook').value = q;
+    }
+
+    // ---------- 选题库 ----------
+    function toggleBankPanel() {
+      const box = document.getElementById('bankFilterBox');
+      const btn = document.getElementById('bankToggleBtn');
+      if (box.classList.contains('hidden')) {
+        box.classList.remove('hidden');
+        btn.textContent = '收起选题库 ▲';
+        loadIdeaBank();
+      } else {
+        box.classList.add('hidden');
+        btn.textContent = '展开选题库 ▼';
+      }
+    }
+
+    async function loadIdeaBank() {
+      try {
+        const res = await fetch('/api/idea-bank');
+        const data = await res.json();
+        document.getElementById('bankCount').textContent = `${data.total} 条`;
+        const counts = data.counts || {};
+        document.getElementById('bankCountAll').textContent = counts.all || 0;
+        document.getElementById('bankCountDraft').textContent = counts.draft || 0;
+        document.getElementById('bankCountUsed').textContent = counts.used || 0;
+        document.getElementById('bankCountArchived').textContent = counts.archived || 0;
+        window.bankAllItems = data.items || [];
+        window.bankSelected = new Set();
+        window.bankShowAll = false;
+        updateBankSelectionUI();
+        applyBankFilter();
+      } catch (e) {
+        console.error('加载选题库失败', e);
+      }
+    }
+
+    function renderBankList(items) {
+      const box = document.getElementById('bankList');
+      if (!items.length) {
+        box.innerHTML = '<p class="text-xs text-warmgray">选题库为空，点击"生成选题"开始累积。</p>';
+        return;
+      }
+      const statusText = { draft: '草稿', used: '已用', archived: '归档' };
+      const selected = window.bankSelected || new Set();
+      const showAll = window.bankShowAll === true;
+      const limit = showAll ? Infinity : 300;
+      const visibleItems = limit === Infinity ? items : items.slice(0, limit);
+      box.innerHTML = visibleItems.map((it) => {
+        const id = it.id || '';
+        const comp = (it.composite !== undefined && it.composite !== null) ? Math.round(it.composite * 100) : null;
+        const compBadge = comp !== null ? `<span class="text-[10px] text-ochre font-medium">★${comp}</span>` : '';
+        const st = it.status || 'draft';
+        const stBadge = st !== 'draft' ? `<span class="text-[10px] text-warmgray bg-white px-1 rounded">${statusText[st] || st}</span>` : '';
+        const themeLabel = it.naval_theme || it.theme || '核心';
+        const checked = selected.has(String(id)) ? 'checked' : '';
+        return `
+        <div class="p-2 rounded-lg bg-cream hover:border-gold border border-transparent transition group" data-id="${escapeHtml(String(id))}">
+          <div class="flex items-start gap-2">
+            <input type="checkbox" ${checked} onchange="toggleBankSelect('${escapeHtml(String(id))}')"
+                   class="mt-0.5 accent-ochre w-4 h-4 flex-shrink-0 cursor-pointer">
+            <div class="flex-1 min-w-0 cursor-pointer" onclick="fillFromBankById('${escapeHtml(String(id))}')">
+              <div class="flex justify-between items-start gap-2">
+                <span class="text-xs font-medium text-ink line-clamp-1">${escapeHtml(it.topic)}</span>
+                <div class="flex items-center gap-1 whitespace-nowrap">${compBadge}<span class="text-[10px] text-warmgray">纳瓦尔·${escapeHtml(themeLabel)}</span>${stBadge}</div>
+              </div>
+              <div class="text-[10px] text-warmgray mt-1 line-clamp-1">${escapeHtml(it.naval_quote || '')}</div>
+            </div>
+          </div>
+          ${it.generated ? `
+          <div class="mt-2 pt-2 border-t border-cream">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[10px] text-ochre font-medium truncate">✓ 已生成 · ${escapeHtml((it.generated.cover_title || it.topic || '').slice(0, 18))}</span>
+              <div class="flex gap-1 flex-shrink-0">
+                <button type="button" onclick="copyBankBody('${escapeHtml(String(id))}')" class="text-[10px] px-1.5 py-0.5 rounded bg-white text-ochre border border-cream hover:bg-cream">复制正文</button>
+                <button type="button" onclick="copyBankTags('${escapeHtml(String(id))}')" class="text-[10px] px-1.5 py-0.5 rounded bg-white text-ochre border border-cream hover:bg-cream">复制话题</button>
+              </div>
+            </div>
+            <p class="text-[10px] text-warmgray mt-1 line-clamp-2">${escapeHtml((it.generated.body || '').slice(0, 100))}${(it.generated.body || '').length > 100 ? '…' : ''}</p>
+            <p class="text-[10px] text-ochre mt-1 line-clamp-1">${escapeHtml(it.generated.tags || '')}</p>
+          </div>` : ''}
+        </div>`;
+      }).join('');
+      // 底部统计：全部显示时只显示总数；未全部显示时提供“显示全部”按钮
+      if (items.length > 300 && !showAll) {
+        box.innerHTML += `<div class="flex items-center justify-center gap-2 mt-2">
+          <span class="text-xs text-warmgray">已显示 300 / ${items.length} 条</span>
+          <button onclick="showAllBankItems()" class="text-xs px-2 py-1 rounded bg-white text-ochre border border-cream hover:bg-cream transition">显示全部</button>
+        </div>`;
+      } else {
+        box.innerHTML += `<p class="text-xs text-warmgray text-center mt-2">共 ${items.length} 条，已全部显示</p>`;
+      }
+    }
+
+    function showAllBankItems() {
+      window.bankShowAll = true;
+      applyBankFilter(false);
+      // 滚动到底部提示区域
+      const box = document.getElementById('bankList');
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function toggleBankSelect(id) {
+      const set = window.bankSelected || new Set();
+      if (set.has(id)) set.delete(id);
+      else set.add(id);
+      window.bankSelected = set;
+      updateBankSelectionUI();
+      // 重新渲染当前列表以同步 checkbox 状态
+      applyBankFilter(false);
+    }
+
+    function toggleBankSelectAll() {
+      const cb = document.getElementById('bankSelectAll');
+      const items = window.bankItems || [];
+      if (cb.checked) {
+        items.forEach(it => { if (it.id) window.bankSelected.add(String(it.id)); });
+      } else {
+        items.forEach(it => { if (it.id) window.bankSelected.delete(String(it.id)); });
+      }
+      updateBankSelectionUI();
+      applyBankFilter(false);
+    }
+
+    function updateBankSelectionUI() {
+      const set = window.bankSelected || new Set();
+      document.getElementById('bankSelectedCount').textContent = `已选 ${set.size} 条`;
+      const visibleItems = window.bankItems || [];
+      const allVisibleSelected = visibleItems.length > 0 && visibleItems.every(it => set.has(String(it.id || '')));
+      document.getElementById('bankSelectAll').checked = allVisibleSelected;
+    }
+
+    function getBankItemById(id) {
+      const all = window.bankAllItems || [];
+      return all.find(it => String(it.id || '') === String(id));
+    }
+
+    function copyBankBody(id) {
+      const it = getBankItemById(id);
+      if (!it || !it.generated) return alert('该选题还没有生成正文');
+      const t = it.generated.body || '';
+      if (!t) return alert('该选题没有正文内容');
+      navigator.clipboard.writeText(t).then(() => alert('已复制正文'));
+    }
+    function copyBankTags(id) {
+      const it = getBankItemById(id);
+      if (!it || !it.generated) return alert('该选题还没有生成内容');
+      const t = it.generated.tags || '';
+      if (!t) return alert('该选题没有话题标签');
+      navigator.clipboard.writeText(t).then(() => alert('已复制话题标签'));
+    }
+
+    function fillFromBankById(id) {
+      const it = getBankItemById(id);
+      if (!it) return;
+      document.getElementById('keyword').value = it.topic;
+      document.getElementById('topic').value = it.topic;
+      document.getElementById('hook').value = it.naval_quote;
+      document.getElementById('cut').value = it.cut_template || '';
+      document.getElementById('voice').value = it.recommended_voice;
+      document.getElementById('insight').value = it.recommended_insight;
+      // 把选题锁定纳瓦尔主题透传给生成步骤，保证前后连贯不跑偏
+      window.currentIdeaTheme = it.naval_theme || it.theme || '';
+      markUsed(it.id, it.topic);
+      document.getElementById('topic').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // 选题库状态筛选
+    window.bankStatus = 'all';
+    function setBankStatus(status) {
+      window.bankStatus = status;
+      window.bankShowAll = false;
+      document.querySelectorAll('#bankStatusChips .bank-chip').forEach(b => {
+        const active = b.getAttribute('data-status') === status;
+        b.className = 'bank-chip px-2 py-0.5 rounded-full ' + (active ? 'bg-ochre text-white' : 'bg-white text-ink hover:bg-ink hover:text-cream transition');
+      });
+      applyBankFilter();
+    }
+    function applyBankFilter(updateSelection = true) {
+      const items = window.bankAllItems || [];
+      const kw = document.getElementById('bankFilter').value.trim().toLowerCase();
+      let filtered = items;
+      if (window.bankStatus !== 'all') {
+        filtered = filtered.filter(it => (it.status || 'draft') === window.bankStatus);
+      }
+      if (kw) {
+        filtered = filtered.filter(it =>
+          (it.topic || '').toLowerCase().includes(kw) ||
+          (it.theme || '').toLowerCase().includes(kw) ||
+          (it.scene || '').toLowerCase().includes(kw) ||
+          (it.naval_theme || '').toLowerCase().includes(kw) ||
+          ((it.naval_themes || []).join(' ')).toLowerCase().includes(kw)
+        );
+      }
+      window.bankItems = filtered;
+      renderBankList(filtered);
+      if (updateSelection) updateBankSelectionUI();
+    }
+    function filterIdeaBank() { window.bankShowAll = false; applyBankFilter(); }
+
+    async function batchActionBank(action) {
+      const ids = Array.from(window.bankSelected || []);
+      if (!ids.length) return alert('请先勾选选题');
+      if (action === 'delete' && !confirm(`确定删除选中的 ${ids.length} 条选题吗？`)) return;
+      try {
+        const res = await fetch('/api/idea-bank/batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids, action })
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || '操作失败');
+        window.bankSelected = new Set();
+        updateBankSelectionUI();
+        // 局部更新数量，减少闪烁
+        if (data.counts) {
+          document.getElementById('bankCountAll').textContent = data.counts.all || 0;
+          document.getElementById('bankCountDraft').textContent = data.counts.draft || 0;
+          document.getElementById('bankCountUsed').textContent = data.counts.used || 0;
+          document.getElementById('bankCountArchived').textContent = data.counts.archived || 0;
+          document.getElementById('bankCount').textContent = `${data.counts.all} 条`;
+        }
+        loadIdeaBank();
+      } catch (e) {
+        alert('批量操作失败：' + e.message);
+      }
+    }
+
+    async function batchGenerateBank() {
+      const ids = Array.from(window.bankSelected || []);
+      if (!ids.length) return alert('请先勾选要批量生成的选题');
+      const items = ids.map(id => getBankItemById(id)).filter(Boolean);
+      if (!items.length) return alert('未找到对应选题');
+
+      const payload = {
+        items: items.map(it => ({
+          id: it.id,
+          topic: it.topic,
+          hook: it.naval_quote || '',
+          voice: it.recommended_voice || '清醒陪伴型',
+          insight: it.recommended_insight || '反常识',
+          cut: it.cut_template || '',
+          angle: it.scene || '',
+          theme: it.naval_theme || it.theme || '',
+          brief: null,
+          strategy: null,
+        })),
+        mode: currentMode || 'template',
+        mark_used: true,
+      };
+
+      openBatchModal();
+      const body = document.getElementById('batchModalBody');
+      const progress = document.getElementById('batchModalProgress');
+      body.innerHTML = '<p class="text-sm text-warmgray">正在生成，请稍候...</p>';
+      progress.textContent = `0 / ${items.length}`;
+
+      try {
+        const res = await fetch('/api/generate/batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        window.batchResults = data.results || [];
+        renderBatchResults(window.batchResults);
+        if (data.counts) {
+          document.getElementById('bankCountAll').textContent = data.counts.all || 0;
+          document.getElementById('bankCountDraft').textContent = data.counts.draft || 0;
+          document.getElementById('bankCountUsed').textContent = data.counts.used || 0;
+          document.getElementById('bankCountArchived').textContent = data.counts.archived || 0;
+          document.getElementById('bankCount').textContent = `${data.counts.all} 条`;
+        }
+        window.bankSelected = new Set();
+        updateBankSelectionUI();
+        await loadIdeaBank();   // 刷新选题库，加载刚回写的成品内容
+      } catch (e) {
+        body.innerHTML = `<p class="text-sm text-red-600">批量生成失败：${escapeHtml(e.message)}</p>`;
+        progress.textContent = '失败';
+      }
+    }
+
+    function openBatchModal() {
+      document.getElementById('batchModal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeBatchModal() {
+      document.getElementById('batchModal').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    function renderBatchResults(results) {
+      const body = document.getElementById('batchModalBody');
+      const progress = document.getElementById('batchModalProgress');
+      const summary = document.getElementById('batchModalSummary');
+      const ok = results.filter(r => r.ok);
+      const fail = results.filter(r => !r.ok);
+      progress.textContent = `完成：成功 ${ok.length} 条 / 失败 ${fail.length} 条`;
+      summary.textContent = `共 ${results.length} 条`;
+
+      if (!results.length) {
+        body.innerHTML = '<p class="text-sm text-warmgray">没有生成结果。</p>';
+        return;
+      }
+
+      body.innerHTML = results.map((r, i) => {
+        if (!r.ok) {
+          return `<div class="p-3 rounded-lg bg-red-50 border border-red-100">
+            <p class="text-xs font-medium text-red-700">#${i + 1} ${escapeHtml(r.topic || '')} — 失败</p>
+            <p class="text-xs text-red-600 mt-1">${escapeHtml(r.error || '未知错误')}</p>
+          </div>`;
+        }
+        const title = escapeHtml(r.cover_title || r.detail_title || r.title || r.topic || '');
+        const text = escapeHtml((r.body || '').trim()).replace(/\n/g, '<br>');
+        return `<div class="p-3 rounded-lg bg-cream border border-cream">
+          <div class="flex justify-between items-start gap-2 mb-2">
+            <h4 class="text-sm font-bold text-ink">#${i + 1} ${title}</h4>
+            <span class="text-[10px] text-warmgray whitespace-nowrap">${escapeHtml(r.theme || '')}</span>
+          </div>
+          <div class="text-xs text-ink leading-relaxed max-h-40 overflow-y-auto bg-white rounded p-2">${text || '<span class="text-warmgray">无正文</span>'}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function copyBatchAll() {
+      const results = window.batchResults || [];
+      const ok = results.filter(r => r.ok);
+      if (!ok.length) return alert('没有可复制的内容');
+      const text = ok.map((r, i) => {
+        return `#${i + 1} ${r.cover_title || r.detail_title || r.title || r.topic || ''}\n\n${r.body || ''}\n\n---`;
+      }).join('\n\n');
+      navigator.clipboard.writeText(text).then(() => alert('已复制全部成功内容'));
+    }
+
+    function downloadBatchAll() {
+      const results = window.batchResults || [];
+      const ok = results.filter(r => r.ok);
+      if (!ok.length) return alert('没有可下载的内容');
+      const text = ok.map((r, i) => {
+        return `# ${r.cover_title || r.detail_title || r.title || r.topic || ''}\n\n${r.body || ''}\n\n---`;
+      }).join('\n\n');
+      const blob = new Blob([text], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `纳瓦尔批量生成_${new Date().toISOString().slice(0,10)}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function batchExportBank() {
+      const ids = Array.from(window.bankSelected || []);
+      if (!ids.length) return alert('请先勾选要导出的选题');
+      const items = ids.map(id => getBankItemById(id)).filter(Boolean);
+      const lines = ['# 纳瓦尔选题库（导出选中）', `> 共 ${items.length} 条`, ''];
+      items.forEach((it, i) => {
+        lines.push(`## ${i + 1}. ${it.topic || ''}`);
+        lines.push(`- 主题：${it.naval_theme || it.theme || ''} / ${it.scene || ''}`);
+        lines.push(`- 金句：${it.naval_quote || ''}`);
+        lines.push(`- 切口：${it.cut_template || ''}`);
+        lines.push(`- 语气：${it.recommended_voice || ''} · 角度：${it.recommended_insight || ''}`);
+        lines.push('');
+      });
+      const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `纳瓦尔选题库_选中_${new Date().toISOString().slice(0,10)}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function clearIdeaBank() {
+      if (!confirm('确定清空选题库吗？已累积的选题将无法恢复。')) return;
+      try {
+        await fetch('/api/idea-bank', { method: 'DELETE' });
+        loadIdeaBank();
+      } catch (e) {
+        alert('清空失败：' + e.message);
+      }
+    }
+
+    function exportIdeaBank() {
+      const a = document.createElement('a');
+      a.href = '/api/idea-bank/export';
+      a.download = `纳瓦尔选题库_${new Date().toISOString().slice(0,10)}.md`;
+      a.click();
+    }
+
+    // ---------- 调研AI ----------
+    async function doResearch() {
+      const topic = document.getElementById('keyword').value.trim() || document.getElementById('topic').value.trim();
+      if (!topic) return alert('请先在顶部输入关键词');
+      if (!configLoaded) return alert('配置加载中，请稍候');
+      const creds = apiCreds();
+      setLoading('researchBtn', true);
+      const card = document.getElementById('briefCard');
+      card.classList.remove('hidden');
+      const box = document.getElementById('briefBox');
+      box.innerHTML = '<p class="text-sm text-warmgray">正在调用红狐拉取真实爆款 + AI 深度分析（捕捉最新 + 找观点空白）...</p>';
+      document.getElementById('strategyCard').classList.add('hidden');
+      try {
+        const res = await fetch('/api/research', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic,
+            redfox_api_key: creds.redfox_api_key,
+            api_key: creds.api_key, base_url: creds.base_url, model: creds.model
+          })
+        });
+        const data = await res.json();
+        if (data.error) {
+          box.innerHTML = '<p class="text-sm text-red-600">调研失败：' + data.error + '</p>';
+          return;
+        }
+        currentBrief = data;
+        renderBrief(data);
+      } catch (e) {
+        box.innerHTML = '<p class="text-sm text-red-600">请求失败：' + e.message + '</p>';
+      } finally {
+        setLoading('researchBtn', false);
+      }
+    }
+
+    function renderBrief(d) {
+      const box = document.getElementById('briefBox');
+      const list = (arr, hint) => (arr && arr.length)
+        ? `<ul class="mt-1 space-y-1">${arr.map(x => `<li class="li-dot text-ink">${escapeHtml(x)}</li>`).join('')}</ul>`
+        : `<p class="text-warmgray text-xs">${hint || '无'}</p>`;
+      box.innerHTML = `
+        <div>
+          <span class="font-medium text-ochre">真实爆款标题（${d._search_count || 0} 条）：</span>
+          ${list(d.hot_titles, '无')}
+        </div>
+        <div>
+          <span class="font-medium text-ochre">高频痛点：</span>
+          ${list(d.pain_points)}
+        </div>
+        <div>
+          <span class="font-medium text-ochre">观点空白（差异化关键）：</span>
+          ${list(d.angle_gaps)}
+        </div>
+        <div>
+          <span class="font-medium text-ochre">可用真实案例/数据：</span>
+          ${list(d.latest_cases)}
+        </div>
+        <div class="grid grid-cols-2 gap-3 pt-1">
+          <div><span class="font-medium text-ochre">推荐语气：</span><span class="text-ink">${escapeHtml(d.recommended_voice || '—')}</span></div>
+          <div><span class="font-medium text-ochre">推荐角度：</span><span class="text-ink">${escapeHtml(d.recommended_insight || '—')}</span></div>
+        </div>
+        <div>
+          <span class="font-medium text-ochre">核心钩子金句：</span>
+          <span class="text-ink cursor-pointer underline decoration-gold" onclick="document.getElementById('hook').value = this.innerText">${escapeHtml(d.core_quote || '—')}</span>
+        </div>`;
+    }
+
+    // ---------- 蒸馏AI ----------
+    async function doDistill() {
+      if (!currentBrief) return alert('请先完成 AI 调研');
+      const creds = apiCreds();
+      setLoading('distillBtn', true);
+      const card = document.getElementById('strategyCard');
+      card.classList.remove('hidden');
+      const box = document.getElementById('strategyBox');
+      box.innerHTML = '<p class="text-sm text-warmgray">正在蒸馏差异化内容策略...</p>';
+      try {
+        const res = await fetch('/api/distill', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            brief: currentBrief,
+            redfox_api_key: creds.redfox_api_key,
+            api_key: creds.api_key, base_url: creds.base_url, model: creds.model
+          })
+        });
+        const data = await res.json();
+        if (data.error) {
+          box.innerHTML = '<p class="text-sm text-red-600">蒸馏失败：' + data.error + '</p>';
+          return;
+        }
+        currentStrategy = data;
+        renderStrategy(data);
+      } catch (e) {
+        box.innerHTML = '<p class="text-sm text-red-600">请求失败：' + e.message + '</p>';
+      } finally {
+        setLoading('distillBtn', false);
+      }
+    }
+
+    function renderStrategy(d) {
+      const box = document.getElementById('strategyBox');
+      const list = (arr, hint) => (arr && arr.length)
+        ? `<ul class="mt-1 space-y-1">${arr.map(x => `<li class="li-dot text-ink">${escapeHtml(x)}</li>`).join('')}</ul>`
+        : `<p class="text-warmgray text-xs">${hint || '无'}</p>`;
+      box.innerHTML = `
+        <div>
+          <span class="font-medium text-ochre">差异化角度（反转让读者"啊哈"）：</span>
+          <p class="text-ink mt-1">${escapeHtml(d.differentiated_angle || '—')}</p>
+        </div>
+        <div>
+          <span class="font-medium text-ochre">六页结构蓝图：</span>
+          ${list(d.structure_blueprint, '无')}
+        </div>
+        <div>
+          <span class="font-medium text-ochre">必须嵌入的真实案例：</span>
+          ${list(d.must_include_cases)}
+        </div>
+        <div>
+          <span class="font-medium text-ochre">必须避开的说法：</span>
+          ${list(d.avoid)}
+        </div>
+        <div>
+          <span class="font-medium text-ochre">标题备选：</span>
+          ${list(d.title_options)}
+        </div>`;
+    }
+
+    function applyGeneratedResult(data) {
+      currentMarkdown = data.markdown;
+      currentTitle = data.title;
+      currentPost = {
+        cover_title: data.cover_title || data.title || '',
+        detail_title: data.detail_title || data.title || '',
+        core_viewpoint: data.core_viewpoint || '',
+        tags: data.tags || '',
+        tags_list: data.tags_list || [],
+        body: data.body || data.markdown || '',
+        detail_caption: data.detail_caption || '',
+        pages: data.pages || [],
+        word_count: data.word_count || '',
+        read_time: data.read_time || ''
+      };
+      renderStructure(currentPost);
+      renderPreview(data);
+      document.getElementById('copyBtn').disabled = false;
+      document.getElementById('copyCaptionBtn').disabled = false;
+      document.getElementById('dlBtn').disabled = false;
+      document.getElementById('copyImportBtn').disabled = false;
+      document.getElementById('dlImportBtn').disabled = false;
+      document.getElementById('qcBtn').disabled = false;
+      document.getElementById('tsBtn').disabled = false;
+      document.getElementById('naBtn').disabled = false;
+      const badge = document.getElementById('modeBadge');
+      badge.classList.remove('hidden');
+      badge.textContent = data.mode === 'ai' ? 'AI 现写' : '模板生成';
+      badge.className = data.mode === 'ai'
+        ? 'text-xs px-2 py-1 rounded-full bg-ochre text-white'
+        : 'text-xs px-2 py-1 rounded-full bg-gold text-ink';
+      if (data.warn) console.warn(data.warn);
+      // 自动把刚生成的文章导入到首条评论板块（标题+正文），方便一键续写首评
+      importArticleToComment(true);
+    }
+
+    function checkCommentTitleLen() {
+      const el = document.getElementById('commentTitle');
+      const cnt = document.getElementById('commentTitleCount');
+      const warn = document.getElementById('commentTitleWarn');
+      const shortenBtn = document.getElementById('shortenTitleBtn');
+      const n = el.value.length;
+      cnt.textContent = `${n} / 20`;
+      if (n > 20) {
+        cnt.className = 'text-xs text-red-600 font-medium';
+        warn.classList.remove('hidden');
+        shortenBtn.classList.remove('hidden');
+      } else {
+        cnt.className = 'text-xs text-warmgray';
+        warn.classList.add('hidden');
+        shortenBtn.classList.add('hidden');
+      }
+    }
+
+    async function shortenCommentTitle() {
+      const el = document.getElementById('commentTitle');
+      const title = el.value.trim();
+      if (!title || title.length <= 20) return;
+      const body = document.getElementById('commentBody').value.trim();
+      const btn = document.getElementById('shortenTitleBtn');
+      const originalText = btn.textContent;
+      btn.textContent = '精简中...';
+      btn.disabled = true;
+      try {
+        const creds = apiCreds();
+        const res = await fetch('/api/shorten-title', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, topic: body.slice(0, 200), api_key: creds.api_key, base_url: creds.base_url, model: creds.model }),
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        el.value = data.title;
+        checkCommentTitleLen();
+      } catch (e) {
+        alert('标题精简失败：' + e.message);
+      } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    function importArticleToComment(silent) {
+      const titleEl = document.getElementById('commentTitle');
+      const bodyEl = document.getElementById('commentBody');
+      const importedTitle = (currentPost.cover_title || currentTitle || '').trim();
+      const importedBody = (currentPost.body || '').trim();
+      if (!silent) {
+        if (!importedTitle && !importedBody) return alert('请先在 Step 3 生成一篇文章，或手动填写标题与正文。');
+      }
+      if (importedTitle) titleEl.value = importedTitle;
+      if (importedBody) bodyEl.value = importedBody;
+      checkCommentTitleLen();
+    }
+
+    async function doFirstComment() {
+      const title = document.getElementById('commentTitle').value.trim();
+      const body = document.getElementById('commentBody').value.trim();
+      const voice = document.getElementById('commentVoice').value;
+      const strategy = document.getElementById('commentStrategy').value;
+      const topic = title;
+      if (title.length > 20) {
+        alert('文章标题需不超过 20 个字符，请先精简标题。');
+        document.getElementById('commentTitle').focus();
+        return;
+      }
+      if (!title && !body) return alert('请填写文章标题或正文');
+      const creds = apiCreds();
+      setLoading('commentBtn', true);
+      const card = document.getElementById('commentCard');
+      card.classList.remove('hidden');
+      const box = document.getElementById('commentBox');
+      box.textContent = '正在生成能引发深度讨论的置顶首评...';
+      document.getElementById('commentSource').textContent = '';
+      try {
+        const res = await fetch('/api/first-comment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title, body, topic, voice, strategy,
+            redfox_api_key: creds.redfox_api_key,
+            api_key: creds.api_key, base_url: creds.base_url, model: creds.model
+          })
+        });
+        const data = await res.json();
+        if (data.error) {
+          box.textContent = '首评生成失败：' + data.error;
+          return;
+        }
+        box.textContent = data.comment || '（空）';
+        const src = data.source === 'ai' ? '✅ 由大模型生成' : '📝 本地模板生成';
+        const warn = data.warn ? ' · ' + data.warn : '';
+        document.getElementById('commentSource').textContent = `${src}${warn}（标题 ${data.title_length || 0} 字）`;
+      } catch (e) {
+        box.textContent = '请求失败：' + e.message;
+      } finally {
+        setLoading('commentBtn', false);
+      }
+    }
+
+    function copyFirstComment() {
+      const text = document.getElementById('commentBox').textContent;
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector('#commentCard button');
+        const old = btn.textContent;
+        btn.textContent = '已复制 ✓';
+        setTimeout(() => { btn.textContent = old; }, 1200);
+      });
+    }
+
+    // ---------- 语气/见解自动匹配 ----------
+    async function autoMatchVoiceInsight() {
+      const topic = document.getElementById('topic').value.trim();
+      const keyword = document.getElementById('keyword').value.trim();
+      const hook = document.getElementById('hook').value.trim();
+      const cut = document.getElementById('cut').value.trim();
+      const theme = window.currentIdeaTheme || '';
+      if (!topic && !keyword) {
+        alert('请先在上方输入选题或关键词');
+        return;
+      }
+      const btn = document.getElementById('autoMatchVoiceBtn');
+      const originalHTML = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span>匹配中…</span>';
+      try {
+        const res = await fetch('/api/match-voice-insight', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic: topic || keyword,
+            scene: cut || topic,
+            theme: theme,
+            hook: hook
+          })
+        });
+        const data = await res.json();
+        if (!data.ok) {
+          alert('匹配失败：' + (data.error || '未知错误'));
+          return;
+        }
+        document.getElementById('voice').value = data.recommended_voice;
+        document.getElementById('insight').value = data.recommended_insight;
+        showToast(`已匹配：${data.recommended_voice} · ${data.recommended_insight}`);
+      } catch (e) {
+        alert('匹配失败：' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+      }
+    }
+
+    function showToast(msg) {
+      const existing = document.getElementById('toastMsg');
+      if (existing) existing.remove();
+      const div = document.createElement('div');
+      div.id = 'toastMsg';
+      div.className = 'fixed top-4 left-1/2 -translate-x-1/2 bg-ink text-cream px-4 py-2 rounded-full text-xs shadow-lg z-50';
+      div.style.position = 'fixed';
+      div.style.top = '16px';
+      div.style.left = '50%';
+      div.style.transform = 'translateX(-50%)';
+      div.style.zIndex = '9999';
+      div.textContent = msg;
+      document.body.appendChild(div);
+      setTimeout(() => div.remove(), 2200);
+    }
+
+    // ---------- 生成 ----------
+    async function generateNote() {
+      const topic = document.getElementById('topic').value.trim();
+      const hook = document.getElementById('hook').value.trim();
+      const cut = document.getElementById('cut').value.trim();
+      const voice = document.getElementById('voice').value;
+      const insight = document.getElementById('insight').value;
+      if (!topic) return alert('请填写选题关键词');
+      // 与后端策略对齐：hook/cut 为空时由纳瓦尔思想库兜底，不再强制阻断
+      if (!hook && !confirm('纳瓦尔金句为空，将自动从纳瓦尔思想库匹配金句继续生成。是否继续？')) return;
+      if (!cut && !confirm('真实切口为空，生成会用通用第一人称示例替代。建议后续替换为你自己的故事。是否继续？')) return;
+
+      const creds = apiCreds();
+      const payload = {
+        topic, hook, voice, insight, cut, mode: currentMode,
+        theme: window.currentIdeaTheme || '',
+        redfox_api_key: creds.redfox_api_key,
+      };
+      if (currentMode === 'ai') {
+        payload.base_url = creds.base_url;
+        payload.api_key = creds.api_key;
+        payload.model = creds.model;
+      }
+      payload.real_notes = (window.hotItems || []).map(it => it.title).filter(Boolean);
+      payload.brief = currentBrief || null;
+      payload.strategy = currentStrategy || null;
+      payload.auto_redfox = true; // 生成时默认用红狐真实爆款(search+trends+covers)作为灵感，消耗红狐积分
+
+      setLoading('genBtn', true);
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.error) return alert(data.error);
+        applyGeneratedResult(data);
+        currentParams = { topic, hook, voice, insight, cut };
+      } catch (e) {
+        alert('生成失败：' + e.message);
+      } finally {
+        setLoading('genBtn', false);
+      }
+    }
+
+    function renderPreview(data) {
+      const container = document.getElementById('previewArea');
+      const pages = data.pages;
+      let html = '';
+      pages.forEach((p, idx) => {
+        if (p.type === 'cover') {
+          html += `
+            <div class="preview-page preview-cover">
+              <div class="text-center">
+                <div class="inline-block px-4 py-1 rounded-full note-tag text-xs font-medium mb-6">女性成长 · 纳瓦尔</div>
+                <h1 class="text-[32px] leading-tight font-bold text-ink mb-6 serif">${escapeHtml(p.title)}</h1>
+                <p class="text-warmgray text-sm">${p.subtitle}</p>
+              </div>
+              <div class="page-num">1 / ${pages.length}</div>
+            </div>
+          `;
+        } else {
+          const bodyHtml = simpleMarkdown(p.body);
+          html += `
+            <div class="preview-page">
+              ${p.title ? `<h2 class="text-xl font-bold text-ink mb-4 serif">${escapeHtml(p.title)}</h2>` : ''}
+              <div class="text-[15px] leading-[1.9] text-ink space-y-4">${bodyHtml}</div>
+              <div class="page-num">${idx + 1} / ${pages.length}</div>
+            </div>
+          `;
+        }
+      });
+      container.innerHTML = html;
+    }
+
+    // ---------- 帖子结构面板 ----------
+    function renderStructure(post) {
+      document.getElementById('structCard').classList.remove('hidden');
+      document.getElementById('fTitle').value = post.cover_title || '';
+      document.getElementById('fCore').value = post.core_viewpoint || '';
+      document.getElementById('fTags').value = post.tags || '';
+      document.getElementById('fCaption').value = post.detail_caption || '';
+      updateTagHint(post.tags || '');
+    }
+
+    function updateTagHint(tagsStr) {
+      const tags = (tagsStr.match(/#\S+/g) || []);
+      const el = document.getElementById('tagLayering');
+      if (!tags.length) { el.textContent = '暂未生成标签'; return; }
+      el.innerHTML = `已生成 <b>${tags.length}</b> 个标签。建议覆盖四层：身份 / 方法论 / 结果 / 平台热词（≥8 个更佳）。`;
+    }
+
+    function onStructEdit() {
+      const title = document.getElementById('fTitle').value.trim();
+      const core = document.getElementById('fCore').value.trim();
+      const tags = document.getElementById('fTags').value.trim();
+      const caption = document.getElementById('fCaption').value.trim();
+      currentPost.cover_title = title;
+      currentPost.detail_title = title; // 标题一致性锚点：详情页=封面
+      currentPost.core_viewpoint = core;
+      currentPost.tags = tags;
+      currentPost.tags_list = (tags.match(/#\S+/g) || []);
+      currentPost.detail_caption = caption;
+      updateTagHint(tags);
+      rebuildPreview();
+    }
+
+    function shortHookText(text, maxLen = 22) {
+      if (!text) return '';
+      if (text.length <= maxLen) return text;
+      let cut = text.slice(0, maxLen);
+      const p = Math.max(cut.lastIndexOf('。'), cut.lastIndexOf('，'), cut.lastIndexOf('；'));
+      return p > 8 ? cut.slice(0, p + 1) : text.slice(0, maxLen) + '…';
+    }
+
+    function rebuildPreview() {
+      const cover = currentPost.cover_title || currentTitle;
+      const cv = currentPost.core_viewpoint || '';
+      const body = currentPost.body || '';
+      let md = '# ' + cover + '\n\n';
+      if (cv) md += '> 💡 核心观点：' + cv + '\n\n';
+      md += body + '\n';
+      const tags = currentPost.tags || '';
+      if (tags && body.indexOf(tags.trim()) === -1) md += '\n' + tags + '\n';
+      currentMarkdown = md.trim();
+      currentTitle = cover;
+
+      const coverSubtitle = shortHookText(cv);
+      let pages;
+      if (currentPost.pages && currentPost.pages.length) {
+        // 编辑时保持原有分页，只更新封面标题/核心观点
+        pages = currentPost.pages.map((p) => {
+          if (p.type === 'cover') return { ...p, title: cover, subtitle: coverSubtitle };
+          return p;
+        });
+      } else {
+        const sections = body.split(/\n##\s+/);
+        pages = [{ type: 'cover', title: cover, subtitle: coverSubtitle }];
+        sections.forEach(s => {
+          s = s.trim();
+          if (!s) return;
+          const idx = s.indexOf('\n');
+          const ptitle = idx === -1 ? s : s.slice(0, idx);
+          const pbody = idx === -1 ? '' : s.slice(idx + 1).trim();
+          pages.push({ type: 'page', title: ptitle, body: pbody });
+        });
+      }
+      renderPreview({ pages: pages, mode: currentMode });
+    }
+
+    // ---------- 质检AI ----------
+    async function doQC() {
+      if (!currentMarkdown) return alert('请先生成内容');
+      const creds = apiCreds();
+      setLoading('qcBtn', true);
+      const card = document.getElementById('qcCard');
+      card.classList.remove('hidden');
+      card.innerHTML = '<p class="text-sm text-warmgray">正在质检（去AI味 / 金句密度 / 女性向 / 人味 / 结构）...</p>';
+      try {
+        const res = await fetch('/api/qc', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            markdown: currentMarkdown,
+            topic: currentTitle,
+            cover_title: currentPost.cover_title || currentTitle,
+            detail_title: currentPost.detail_title || currentTitle,
+            core_viewpoint: currentPost.core_viewpoint || '',
+            tags: currentPost.tags || '',
+            redfox_api_key: creds.redfox_api_key,
+            api_key: creds.api_key, base_url: creds.base_url, model: creds.model
+          })
+        });
+        const data = await res.json();
+        if (data.error) {
+          card.innerHTML = '<p class="text-sm text-red-600">质检失败：' + data.error + '</p>';
+          return;
+        }
+        currentQCReport = data;
+        renderQC(data);
+      } catch (e) {
+        card.innerHTML = '<p class="text-sm text-red-600">请求失败：' + e.message + '</p>';
+      } finally {
+        setLoading('qcBtn', false);
+      }
+    }
+
+    function renderQC(d) {
+      const card = document.getElementById('qcCard');
+      const list = (arr) => (arr && arr.length)
+        ? `<ul class="mt-1 space-y-1">${arr.map(x => `<li class="li-dot text-ink">${escapeHtml(x)}</li>`).join('')}</ul>`
+        : '<p class="text-warmgray text-xs">无明显问题</p>';
+      const chk = (v, ok) => `<span class="${ok ? 'text-green-700' : 'text-red-600'} font-medium">${ok ? '✓' : '✗'} ${escapeHtml(v ?? '—')}</span>`;
+      const scoreColor = (d.score >= 80) ? 'text-green-700' : (d.score >= 60 ? 'text-gold' : 'text-red-600');
+      card.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-base font-bold text-ink flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full bg-ochre text-white flex items-center justify-center text-xs">检</span>
+            质检报告
+          </h3>
+          <div class="flex items-center gap-2">
+            <span class="text-2xl font-bold ${scoreColor}">${d.score ?? '—'}</span>
+            <span class="text-xs text-warmgray">/100 · ${escapeHtml(d.verdict || '')}</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 text-sm">
+          <div class="bg-cream rounded-lg p-2">标题一致性<br>${chk(d.title_consistency, d.title_consistency === true)}</div>
+          <div class="bg-cream rounded-lg p-2">核心观点出现<br>${chk(d.core_present, d.core_present === true)}</div>
+          <div class="bg-cream rounded-lg p-2">标签分层<br><span class="text-ink">${escapeHtml(d.tags_layering || '—')}</span></div>
+          <div class="bg-cream rounded-lg p-2">行动召唤<br>${chk(d.action_cta, d.action_cta === true)}</div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <span class="font-medium text-ochre">AI味检测：</span>
+            ${list(d.ai_smell)}
+          </div>
+          <div>
+            <span class="font-medium text-ochre">金句密度：</span>
+            <p class="text-ink mt-1">${escapeHtml(d.quote_density || '—')}</p>
+          </div>
+          <div>
+            <span class="font-medium text-ochre">具体问题：</span>
+            ${list(d.issues)}
+          </div>
+          <div>
+            <span class="font-medium text-ochre">改写建议：</span>
+            ${list(d.suggestions)}
+          </div>
+        </div>
+        <div class="mt-4 flex items-center gap-3">
+          <button onclick="doRewrite()" id="rewriteBtn" class="px-4 py-2 rounded-lg bg-ochre text-white text-sm font-medium hover:bg-amber-700 transition">按报告建议改写</button>
+          <span class="text-xs text-warmgray">会根据具体问题 + 改写建议重写一篇，保留原选题/语气/切口</span>
+        </div>`;
+    }
+
+    // ---------- 红狐 title-score：六维加权评分 ----------
+    async function doTitleScore() {
+      const title = currentPost.cover_title || currentTitle || '';
+      if (!title) return alert('请先生成内容');
+      const topic = currentTitle || document.getElementById('topic').value.trim();
+      const creds = apiCreds();
+      setLoading('tsBtn', true);
+      const card = document.getElementById('redfoxScoreCard');
+      card.classList.remove('hidden');
+      card.innerHTML = '<p class="text-sm text-warmgray">正在用红狐真实爆款数据评估标题（六维加权评分）...</p>';
+      try {
+        const res = await fetch('/api/title-score', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, topic, redfox_api_key: creds.redfox_api_key, api_key: creds.api_key, base_url: creds.base_url, model: creds.model })
+        });
+        const d = await res.json();
+        if (d.error) { card.innerHTML = '<p class="text-sm text-red-600">标题评分失败：' + d.error + '</p>'; return; }
+        renderTitleScore(d);
+      } catch (e) {
+        card.innerHTML = '<p class="text-sm text-red-600">请求失败：' + e.message + '</p>';
+      } finally {
+        setLoading('tsBtn', false);
+      }
+    }
+
+    function renderTitleScore(d) {
+      const card = document.getElementById('redfoxScoreCard');
+      const dims = (d.dims || []).map(x => `
+        <div class="bg-cream rounded-lg p-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-ink">${escapeHtml(x.name)}<span class="text-warmgray"> · ${x.weight}%</span></span>
+            <span class="font-bold text-ink">${x.score}</span>
+          </div>
+          <p class="text-warmgray text-xs mt-1">${escapeHtml(x.comment || '')}</p>
+        </div>`).join('');
+      const alts = (d.alt_titles || []).map(t => `<li class="li-dot text-ink">${escapeHtml(t)}</li>`).join('');
+      const sug = (d.suggestions || []).map(t => `<li class="li-dot text-ink">${escapeHtml(t)}</li>`).join('');
+      const redfoxNote = d._redfox_ok
+        ? `<span class="text-xs text-green-700">已基于红狐真实爆款数据（${d._trend_count} 条标题规律）评分</span>`
+        : `<span class="text-xs text-red-600">红狐爆款数据获取失败，评分仅基于通用规律</span>`;
+      card.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-base font-bold text-ink flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full text-white flex items-center justify-center text-xs" style="background:#ff2442">狐</span>
+            标题评分 · 红狐真实爆款对标
+          </h3>
+          <div class="flex items-center gap-2">
+            <span class="text-2xl font-bold text-ink">${d.total ?? '—'}</span>
+            <span class="text-xs text-warmgray">/10 · ${escapeHtml(d.grade || '')}</span>
+          </div>
+        </div>
+        <p class="text-sm text-ink mb-3">${escapeHtml(d.summary || '')}</p>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">${dims}</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div><span class="font-medium" style="color:#ff2442">更爆的替代标题：</span><ul class="mt-1 space-y-1">${alts}</ul></div>
+          <div><span class="font-medium" style="color:#ff2442">优化建议：</span><ul class="mt-1 space-y-1">${sug}</ul></div>
+        </div>
+        <p class="mt-3">${redfoxNote}</p>`;
+    }
+
+    // ---------- 红狐 note-analyzer：四维度评分对标 ----------
+    async function doNoteAnalyze() {
+      if (!currentPost.body) return alert('请先生成内容');
+      const topic = currentTitle || document.getElementById('topic').value.trim();
+      const creds = apiCreds();
+      setLoading('naBtn', true);
+      const card = document.getElementById('noteAnalyzeCard');
+      card.classList.remove('hidden');
+      card.innerHTML = '<p class="text-sm text-warmgray">正在用红狐真实爆款数据对标笔记（四维度评分）...</p>';
+      try {
+        const res = await fetch('/api/note-analyze', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ body: currentPost.body, topic, redfox_api_key: creds.redfox_api_key, api_key: creds.api_key, base_url: creds.base_url, model: creds.model })
+        });
+        const d = await res.json();
+        if (d.error) { card.innerHTML = '<p class="text-sm text-red-600">笔记体检失败：' + d.error + '</p>'; return; }
+        renderNoteAnalyze(d);
+      } catch (e) {
+        card.innerHTML = '<p class="text-sm text-red-600">请求失败：' + e.message + '</p>';
+      } finally {
+        setLoading('naBtn', false);
+      }
+    }
+
+    function renderNoteAnalyze(d) {
+      const card = document.getElementById('noteAnalyzeCard');
+      const scoreColor = (d.total >= 80) ? 'text-green-700' : (d.total >= 60 ? 'text-gold' : 'text-red-600');
+      const dims = (d.dims || []).map(x => `
+        <div class="bg-cream rounded-lg p-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-ink">${escapeHtml(x.name)}</span>
+            <span class="font-bold text-ink">${x.score}</span>
+          </div>
+          <p class="text-warmgray text-xs mt-1">${escapeHtml(x.comment || '')}</p>
+        </div>`).join('');
+      const sug = (d.suggestions || []).map(t => `<li class="li-dot text-ink">${escapeHtml(t)}</li>`).join('');
+      const refs = (d.references || []).map(r => `<li class="li-dot text-ink"><a href="${escapeHtml(r.link || '#')}" target="_blank" class="underline" style="color:#ff2442">${escapeHtml(r.title || '')}</a> <span class="text-warmgray">（${escapeHtml(r.interactions || '')}）</span></li>`).join('');
+      const redfoxNote = d._redfox_ok
+        ? `<span class="text-xs text-green-700">已基于红狐真实爆款数据（${d._trend_count} 条标题规律）对标</span>`
+        : `<span class="text-xs text-red-600">红狐爆款数据获取失败，评分仅基于通用规律</span>`;
+      card.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-base font-bold text-ink flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full text-white flex items-center justify-center text-xs" style="background:#ff2442">狐</span>
+            笔记体检 · 红狐真实爆款对标
+          </h3>
+          <div class="flex items-center gap-2">
+            <span class="text-2xl font-bold ${scoreColor}">${d.total ?? '—'}</span>
+            <span class="text-xs text-warmgray">/100 · ${escapeHtml(d.grade || '')}</span>
+          </div>
+        </div>
+        <p class="text-sm text-ink mb-1">爆款公式：<span class="font-medium">${escapeHtml(d.formula || '')}</span></p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 my-3">${dims}</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div><span class="font-medium" style="color:#ff2442">改进建议：</span><ul class="mt-1 space-y-1">${sug}</ul></div>
+          <div><span class="font-medium" style="color:#ff2442">参考的爆款笔记：</span><ul class="mt-1 space-y-1">${refs}</ul></div>
+        </div>
+        <p class="mt-3">${redfoxNote}</p>`;
+    }
+
+    // ---------- 按 QC 建议改写 ----------
+    async function doRewrite() {
+      if (!currentMarkdown) return alert('请先生成内容');
+      if (!currentQCReport) return alert('请先完成质检');
+      const creds = apiCreds();
+      setLoading('rewriteBtn', true);
+      const card = document.getElementById('qcCard');
+      try {
+        const res = await fetch('/api/rewrite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            markdown: currentMarkdown,
+            qc_report: currentQCReport,
+            topic: currentTitle,
+            cover_title: currentPost.cover_title || currentTitle,
+            detail_title: currentPost.detail_title || currentTitle,
+            core_viewpoint: currentPost.core_viewpoint || '',
+            tags: currentPost.tags || '',
+            hook: currentParams.hook || '',
+            voice: currentParams.voice || '清醒陪伴型',
+            insight: currentParams.insight || '反常识',
+            cut: currentParams.cut || '',
+            redfox_api_key: creds.redfox_api_key,
+            api_key: creds.api_key, base_url: creds.base_url, model: creds.model
+          })
+        });
+        const data = await res.json();
+        if (data.error) {
+          card.innerHTML += '<p class="text-sm text-red-600 mt-3">改写失败：' + data.error + '</p>';
+          return;
+        }
+        applyGeneratedResult(data);
+        card.innerHTML += '<p class="text-sm text-green-700 mt-3">✓ 已按 QC 建议改写完成，上方内容与结构卡片已更新。</p>';
+      } catch (e) {
+        card.innerHTML += '<p class="text-sm text-red-600 mt-3">改写请求失败：' + e.message + '</p>';
+      } finally {
+        setLoading('rewriteBtn', false);
+      }
+    }
+
+    function simpleMarkdown(text) {
+      // 图文内页只渲染正文：加粗、高亮金句、换行；不渲染 #标签（标签已独立展示）
+      return escapeHtml(text)
+        .replace(/\*\*(.+?)\*\*/g, '<strong class="text-ochre">$1</strong>')
+        .replace(/『(.+?)』/g, '<span class="gold-highlight">『$1』</span>')
+        .replace(/\n\n/g, '</p><p class="text-[15px] leading-[1.9] text-ink">')
+        .replace(/\n/g, '<br>');
+    }
+
+    function escapeHtml(str) {
+      if (typeof str !== 'string') str = (str === null || str === undefined) ? '' : String(str);
+      return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    function formatNum(n) {
+      const num = parseInt(n) || 0;
+      if (num >= 10000) return (num / 10000).toFixed(1) + 'w';
+      if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+      return num;
+    }
+
+    function copyMarkdown() {
+      navigator.clipboard.writeText(currentMarkdown).then(() => {
+        const btn = document.getElementById('copyBtn');
+        const old = btn.textContent;
+        btn.textContent = '已复制';
+        setTimeout(() => btn.textContent = old, 1500);
+      });
+    }
+
+    function copyCaption() {
+      const caption = currentPost.detail_caption || '';
+      const tags = currentPost.tags || '';
+      const text = caption + (tags ? '\n\n' + tags : '');
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copyCaptionBtn');
+        const old = btn.textContent;
+        btn.textContent = '已复制';
+        setTimeout(() => btn.textContent = old, 1500);
+      });
+    }
+
+    function downloadMarkdown() {
+      const blob = new Blob([currentMarkdown], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${currentTitle || '纳瓦尔笔记'}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ---------- 一键导入『纳瓦尔图文生成器.html』格式 ----------
+    async function fetchImportText() {
+      const payload = {
+        cover_title: currentPost.cover_title || currentTitle || '',
+        detail_title: currentPost.detail_title || currentTitle || '',
+        core_viewpoint: currentPost.core_viewpoint || '',
+        tags: currentPost.tags || '',
+        body: currentPost.body || '',
+        word_count: currentPost.word_count || '',
+        read_time: currentPost.read_time || '',
+      };
+      const res = await fetch('/api/export-import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      return data.text || '';
+    }
+
+    async function copyImportText() {
+      if (!currentPost.body) return alert('请先生成内容');
+      try {
+        const text = await fetchImportText();
+        await navigator.clipboard.writeText(text);
+        const btn = document.getElementById('copyImportBtn');
+        const old = btn.textContent;
+        btn.textContent = '已复制';
+        setTimeout(() => btn.textContent = old, 1500);
+      } catch (e) {
+        alert('复制失败：' + e.message);
+      }
+    }
+
+    async function downloadImportText() {
+      if (!currentPost.body) return alert('请先生成内容');
+      try {
+        const text = await fetchImportText();
+        const blob = new Blob([text], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${(currentPost.cover_title || currentTitle || '纳瓦尔笔记')}（导入纳瓦尔生成器）.md`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        alert('下载失败：' + e.message);
+      }
+    }
+  </script>
+
+  <!-- 批量生成结果弹窗 -->
+  <div id="batchModal" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-paper rounded-2xl card-shadow w-full max-w-3xl max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-cream">
+        <h3 class="text-base font-bold text-ink">批量生成结果</h3>
+        <button onclick="closeBatchModal()" class="text-warmgray hover:text-ink text-xl leading-none">&times;</button>
+      </div>
+      <div id="batchModalProgress" class="px-5 py-3 border-b border-cream text-sm text-warmgray">
+        等待开始...
+      </div>
+      <div id="batchModalBody" class="flex-1 overflow-y-auto p-5 space-y-4">
+        <p class="text-sm text-warmgray">选择选题后点击“批量生成”，结果会出现在这里。</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2 px-5 py-4 border-t border-cream bg-cream/50 rounded-b-2xl">
+        <button onclick="copyBatchAll()" class="px-3 py-1.5 rounded-lg bg-ochre text-white text-xs hover:opacity-90 transition">复制全部</button>
+        <button onclick="downloadBatchAll()" class="px-3 py-1.5 rounded-lg bg-white text-ink border border-cream text-xs hover:bg-cream transition">下载全部 .md</button>
+        <span id="batchModalSummary" class="text-xs text-warmgray ml-auto"></span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
